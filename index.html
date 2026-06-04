@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penny Drive Leaderboard</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --rainbow-gradient: linear-gradient(45deg, #e40303, #ff8c00, #ffed00, #008026, #004cff, #732982);
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; padding-bottom: 60px; }
+        .container { max-width: 800px; margin: 0 auto; }
+
+        header {
+            position: relative; background: var(--card-bg); padding: 30px; 
+            border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px; overflow: hidden;
+        }
+        header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--rainbow-gradient); }
+        
+        .total-raised { background: #f0fdf4; border: 2px dashed #22c55e; padding: 15px; border-radius: 12px; display: inline-block; margin-top: 15px;}
+        .total-raised h2 { color: #166534; font-size: 2rem; }
+
+        /* Podium Setup */
+        .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; padding-top: 20px; }
+        .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
+        .podium-spot.first { order: 2; min-height: 250px; border: 2px solid #eab308;}
+        .podium-spot.second { order: 1; min-height: 210px; border: 2px solid #cbd5e1;}
+        .podium-spot.third { order: 3; min-height: 180px; border: 2px solid #b45309;}
+
+        .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .first .badge { background: #eab308; } .second .badge { background: #94a3b8; } .third .badge { background: #b45309; }
+
+        .avatar { width: 65px; height: 65px; border-radius: 50%; background: #eee; margin: 10px auto; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .teacher-name { font-weight: bold; margin-bottom: 5px; }
+        .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; }
+
+        /* Leaderboard List */
+        .leaderboard-list { background: var(--card-bg); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;}
+        .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .list-item:last-child { border-bottom: none; }
+        .rank-num { width: 30px; font-weight: bold; color: #888; }
+        .list-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .list-name { flex-grow: 1; font-weight: 600; }
+
+        /* Action Buttons */
+        .btn-add { background: #2563eb; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: none; align-items: center; justify-content: center; }
+        .btn-add:hover { background: #1d4ed8; }
+
+        /* Lazy Transactions Section */
+        .transactions-section { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .btn-load-transactions { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-load-transactions:hover { background: #374151; }
+        .transaction-log { margin-top: 15px; max-height: 250px; overflow-y: auto; display: none; }
+        .tx-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; font-size: 0.95rem; }
+
+        /* Modal styling */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #666; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-cancel { background: #e2e8f0; }
+        .btn-submit { background: #16a34a; color: white; }
+        
+        .status-badge { display: inline-block; padding: 4px 8px; background: #e2e8f0; border-radius: 12px; font-size: 0.75rem; margin-top: 5px; font-weight: bold;}
+        .status-badge.teacher { background: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Penny Drive Leaderboard! 🏳️‍🌈</h1>
+        <p style="color: #555; margin-top: 5px;">Losers get a pie to the face, proceeds go to LGBTQIA+ support charities!</p>
+        <div class="total-raised">
+            Total Money Raised: <h2 id="grand-total">$0.00</h2>
+        </div>
+        <div><span id="device-status" class="status-badge">Student View</span></div>
+    </header>
+
+    <div class="podium" id="podium-container"></div>
+    <div class="leaderboard-list" id="runners-container"></div>
+
+    <div class="transactions-section">
+        <h3>Audit Log</h3>
+        <button class="btn-load-transactions" id="load-tx-btn" onclick="toggleTransactions()">Show All Transactions</button>
+        <div class="transaction-log" id="tx-log-container">Loading transactions...</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="donation-modal">
+    <div class="modal">
+        <h3 id="modal-title">Log Donation</h3>
+        <input type="hidden" id="target-teacher-id">
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="student-name">Student Name</label>
+            <input type="text" id="student-name" placeholder="Anonymous Student">
+        </div>
+        <div class="form-group">
+            <label for="donation-amount">Amount ($)</label>
+            <input type="number" id="donation-amount" step="0.01" min="0.01" placeholder="0.00">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-submit" onclick="submitDonation()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. YOUR FIREBASE CONFIGURATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhRYOITsnUJxkpiKddP2bZRJRlllYkxJk",
+      authDomain: "pennydrive26.firebaseapp.com",
+      databaseURL: "https://pennydrive26-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "pennydrive26",
+      storageBucket: "pennydrive26.firebasestorage.app",
+      messagingSenderId: "161120076673",
+      appId: "1:161120076673:web:347186ca8882391d2a9e80"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. TOKEN & SECURITY CONFIGURATION
+    const SECRET_TEACHER_TOKEN = "CHANGE_THIS_TO_YOUR_128_BIT_TOKEN_STRING";
+    let isTeacher = false;
+    let transactionsLoaded = false;
+
+    // Check for token initialization rules
+    function checkAuthorization() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('token')) {
+            const token = urlParams.get('token');
+            localStorage.setItem('pd_auth_token', token);
+            // Clean up the URL query parameter so students don't see it
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        const savedToken = localStorage.getItem('pd_auth_token');
+        if (savedToken === SECRET_TEACHER_TOKEN) {
+            isTeacher = true;
+            const badge = document.getElementById('device-status');
+            badge.innerText = "Teacher Mode Enabled";
+            badge.classList.add('teacher');
+        }
+    }
+
+    // Default seed setup if database is completely blank
+    const defaultTeachers = {
+        "t1": { id: "t1", title: "Herr", name: "Schmidt", total: 0, avatar: "👨‍🏫" },
+        "t2": { id: "t2", title: "Ms.", name: "Gomez", total: 0, avatar: "👩‍🏫" },
+        "t3": { id: "t3", title: "Frau", name: "Müller", total: 0, avatar: "👩‍🏫" },
+        "t4": { id: "t4", title: "Mr.", name: "Blackwood", total: 0, avatar: "👨‍🏫" },
+        "t5": { id: "t5", title: "Mx.", name: "Turing", total: 0, avatar: "🧑‍🏫" }
+    };
+
+    let cachedTeachers = {};
+
+    // 3. REALTIME DATA SYNC (Load Teacher board instantly)
+    db.ref('teachers').on('value', (snapshot) => {
+        if (!snapshot.exists()) {
+            // Seed base configuration data if database is fresh
+            db.ref('teachers').set(defaultTeachers);
+            return;
+        }
+        cachedTeachers = snapshot.val();
+        renderBoard();
+    });
+
+    function renderBoard() {
+        const sorted = Object.values(cachedTeachers).sort((a, b) => b.total - a.total);
+        const grandTotal = sorted.reduce((sum, t) => sum + t.total, 0);
+        document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
+
+        const displayBtn = isTeacher ? 'inline-flex' : 'none';
+
+        // Render Top 3 Podium Cards
+        const podiumContainer = document.getElementById('podium-container');
+        podiumContainer.innerHTML = '';
+        const layoutOrder = [1, 0, 2]; // 2nd, 1st, 3rd visually
+        const classes = ['first', 'second', 'third'];
+
+        layoutOrder.forEach((index) => {
+            const t = sorted[index];
+            if (t) {
+                podiumContainer.innerHTML += `
+                    <div class="podium-spot ${classes[index]}">
+                        <div class="badge">${index + 1}</div>
+                        <div class="avatar">${t.avatar}</div>
+                        <div class="teacher-name">${t.title} ${t.name}</div>
+                        <div class="teacher-amount">$${t.total.toFixed(2)}</div>
+                        <button class="btn-add" style="display: ${displayBtn}; margin-top:10px;" onclick="openModal('${t.id}')">+</button>
+                    </div>`;
+            }
+        });
+
+        // Render standard scroll table rows for everyone else
+        const runnersContainer = document.getElementById('runners-container');
+        runnersContainer.innerHTML = '';
+        if (sorted.length > 3) {
+            for (let i = 3; i < sorted.length; i++) {
+                const t = sorted[i];
+                runnersContainer.innerHTML += `
+                    <div class="list-item">
+                        <div class="rank-num">#${i + 1}</div>
+                        <div class="list-avatar">${t.avatar}</div>
+                        <div class="list-name">${t.title} ${t.name}</div>
+                        <div class="teacher-amount" style="font-size:1.1rem; margin-right:15px;">$${t.total.toFixed(2)}</div>
+                        <button class="btn-add" style="display: ${displayBtn};" onclick="openModal('${t.id}')">+</button>
+                    </div>`;
+            }
+        }
+    }
+
+    // 4. LAZY LOADING LOGIC FOR TRANSACTIONS
+    function toggleTransactions() {
+        const container = document.getElementById('tx-log-container');
+        const btn = document.getElementById('load-tx-btn');
+
+        if (container.style.display === 'block') {
+            container.style.display = 'none';
+            btn.innerText = "Show All Transactions";
+        } else {
+            container.style.display = 'block';
+            btn.innerText = "Hide Transactions";
+            
+            // Lazy load from Firebase on first click demand
+            if (!transactionsLoaded) {
+                db.ref('transactions').orderByChild('timestamp').on('value', (snapshot) => {
+                    transactionsLoaded = true;
+                    if (!snapshot.exists()) {
+                        container.innerHTML = `<p style="color:#aaa; font-style:italic;">No transactions logged yet.</p>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    const txs = [];
+                    snapshot.forEach(child => { txs.push(child.val()); });
+                    txs.reverse(); // Newest transactions on top
+
+                    txs.forEach(tx => {
+                        html += `
+                            <div class="tx-item">
+                                <span><strong>$${tx.amount.toFixed(2)}</strong> from ${tx.student} to <strong>${tx.to}</strong></span>
+                                <span style="color:#888; font-size:0.8rem;">${tx.time}</span>
+                            </div>`;
+                    });
+                    container.innerHTML = html;
+                });
+            }
+        }
+    }
+
+    // 5. WRITE TRANSACTIONS AND ATOMIC SUMS
+    function openModal(id) {
+        const teacher = cachedTeachers[id];
+        document.getElementById('target-teacher-id').value = id;
+        document.getElementById('modal-title').innerText = `Add Money to ${teacher.title} ${teacher.name}'s Jar`;
+        document.getElementById('donation-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('donation-modal').style.display = 'none';
+        document.getElementById('student-name').value = '';
+        document.getElementById('donation-amount').value = '';
+    }
+
+    function submitDonation() {
+        const id = document.getElementById('target-teacher-id').value;
+        const student = document.getElementById('student-name').value.trim() || "Anonymous Student";
+        const amount = parseFloat(document.getElementById('donation-amount').value);
+
+        if (isNaN(amount) || amount <= 0) {
+            alert("Please enter a valid dollar amount.");
+            return;
+        }
+
+        const teacher = cachedTeachers[id];
+        const timestamp = new Date().toLocaleString();
+        
+        // Step A: Safely increment database values using atomic transaction math
+        db.ref(`teachers/${id}/total`).transaction((currentTotal) => {
+            return (currentTotal || 0) + amount;
+        });
+
+        // Step B: Log the transaction trail entry
+        db.ref('transactions').push({
+            teacherId: id,
+            to: `${teacher.title} ${teacher.name}`,
+            student: student,
+            amount: amount,
+            time: timestamp,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+
+        closeModal();
+    }
+
+    // Run authentication evaluation cycle on page presentation
+    checkAuthorization();
+</script>
+</body>
+</html>
