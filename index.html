@@ -18,7 +18,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; padding-bottom: 100px; }
         
-        /* Expanded container optimization to give columns maximal room */
         .container { max-width: 1000px; margin: 0 auto; }
 
         /* Compact Inline Header Layout */
@@ -61,14 +60,52 @@
         .rank-num { width: 30px; font-weight: bold; color: #888; }
         .list-name { flex-grow: 1; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
-        /* Live Notification Toast Stack System */
-        .notification-container { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column-reverse; gap: 12px; z-index: 10000; pointer-events: none; }
-        .toast { pointer-events: auto; position: relative; background: #1e293b; color: #ffffff; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); min-width: 320px; max-width: 450px; font-size: 1.05rem; font-weight: 500; overflow: hidden; border-left: 5px solid #22c55e; animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .toast-bar { position: absolute; top: 0; left: 0; height: 4px; background: #22c55e; width: 100%; animation: toastProgress 4s linear forwards; }
+        /* Bottom-Right Notification Toast Stack System */
+        .notification-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column-reverse; gap: 12px; z-index: 10000; pointer-events: none; }
+        
+        .toast { 
+            pointer-events: auto; 
+            position: relative; 
+            color: #ffffff; 
+            padding: 18px 24px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
+            min-width: 340px; 
+            max-width: 450px; 
+            font-size: 1.05rem; 
+            font-weight: 500; 
+            overflow: hidden; 
+            animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
+
+        /* Hardware accelerated conic seamless spinner background layer */
+        .toast::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(#e40303, #ff8c00, #ffed00, #008026, #004cff, #732982, #e40303);
+            animation: perimeterRotate 30s linear forwards;
+            z-index: 0;
+        }
+
+        /* Inner canvas center mask to format precise 3px outline border geometry */
+        .toast-inner {
+            position: absolute;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
+            background: #1e293b;
+            border-radius: 9px;
+            z-index: 1;
+        }
+
+        .toast-content {
+            position: relative;
+            z-index: 2;
+            line-height: 1.4;
+        }
         
         @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
-        @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+        @keyframes perimeterRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         /* Live Component Visual Flash Highlighting Animation */
         .highlight-flash { animation: cardFlash 4s ease; }
@@ -230,17 +267,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         let clearTokenFromUrl = false;
         
-        // 1. Capture and save token across transitions
         if (urlParams.has('token')) {
             localStorage.setItem('pd_auth_token', urlParams.get('token').trim());
-            urlParams.delete('token'); // clear parameter trace
+            urlParams.delete('token'); 
             clearTokenFromUrl = true;
         }
         
         if (urlParams.get('mode') === 'dev') isDev = true;
         if (urlParams.get('mode') === 'board') isBoard = true;
 
-        // 2. Erase plain text token parameter from view history
         if (clearTokenFromUrl) {
             const remainingQuery = urlParams.toString() ? '?' + urlParams.toString() : '';
             window.history.replaceState({}, document.title, window.location.pathname + remainingQuery);
@@ -248,7 +283,6 @@
 
         savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
 
-        // Evaluate runtime configurations
         if (isBoard) {
             document.getElementById('audit-log-section').style.display = 'none';
             initLiveNotificationStream();
@@ -258,9 +292,13 @@
         .then((snapshot) => {
             if (snapshot.exists() && (snapshot.val() === true || snapshot.val() === "true")) {
                 isTeacher = true;
-                document.getElementById('fab-donation').style.display = 'flex';
-                if (isDev) {
-                    document.getElementById('fab-teacher').style.display = 'flex';
+                
+                // Never mount UI action controls if running a public projection screen layout
+                if (!isBoard) {
+                    document.getElementById('fab-donation').style.display = 'flex';
+                    if (isDev) {
+                        document.getElementById('fab-teacher').style.display = 'flex';
+                    }
                 }
             }
             loadBoardData();
@@ -271,7 +309,6 @@
         });
     }
 
-    // Connect real-time callback hooks to display alerts on active board configurations
     function initLiveNotificationStream() {
         const appConnectionTime = Date.now();
         
@@ -290,27 +327,25 @@
         toast.className = 'toast';
         
         toast.innerHTML = `
-            <div class="toast-bar"></div>
-            <span><strong>${tx.student}</strong> donated <strong>$${tx.amount.toFixed(2)}</strong> to <strong>${tx.to}</strong>!</span>
+            <div class="toast-inner"></div>
+            <div class="toast-content">
+                <strong>${tx.student}</strong> donated <strong>$${tx.amount.toFixed(2)}</strong> to <strong>${tx.to}</strong>!
+            </div>
         `;
         
-        // Flex column-reverse appends elements to the top of the viewport
         stack.appendChild(toast);
         
-        // Locate matching module components on layout grid to apply temporary flash classes
         const targetElement = document.getElementById(`card-${tx.teacherId}`);
         if (targetElement) {
             targetElement.classList.add('highlight-flash');
-            setTimeout(() => {
-                targetElement.classList.remove('highlight-flash');
-            }, 4100);
+            setTimeout(() => { targetElement.classList.remove('highlight-flash'); }, 4100);
         }
         
-        // Orchestrate animation dismissals
+        // Extended countdown lifecycle set to exactly 30 seconds
         setTimeout(() => {
             toast.style.animation = 'toastOut 0.4s ease forwards';
             setTimeout(() => { toast.remove(); }, 400);
-        }, 4000);
+        }, 30000); 
     }
 
     function loadBoardData() {
@@ -346,7 +381,7 @@
         layoutOrder.forEach((index) => {
             const t = sorted[index];
             if (t) {
-                const devEditMarkup = isDev ? `<button class="dev-edit-btn" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
+                const devEditMarkup = (isDev && !isBoard) ? `<button class="dev-edit-btn" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
                 podiumContainer.innerHTML += `
                     <div class="podium-spot ${classes[index]}" id="card-${t.id}">
                         <div class="badge">${index + 1}</div>
@@ -364,7 +399,7 @@
         if (sorted.length > 3) {
             for (let i = 3; i < sorted.length; i++) {
                 const t = sorted[i];
-                const devEditMarkup = isDev ? `<button class="dev-edit-btn" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
+                const devEditMarkup = (isDev && !isBoard) ? `<button class="dev-edit-btn" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
                 runnersContainer.innerHTML += `
                     <div class="list-item" id="card-${t.id}">
                         <div class="rank-num">#${i + 1}</div>
