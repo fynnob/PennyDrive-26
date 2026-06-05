@@ -148,6 +148,7 @@
 </div>
 
 <script>
+    // Replace placeholders with your real Firebase Project configurations
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -192,7 +193,7 @@
                 isTeacher = true;
                 document.getElementById('device-status').innerText = "Teacher Mode Enabled";
                 document.getElementById('device-status').classList.add('teacher');
-                document.getElementById('floating-add-btn').style.display = 'flex'; // Show fixed bottom right layout item
+                document.getElementById('floating-add-btn').style.display = 'flex'; 
             }
             loadBoardData();
         })
@@ -324,17 +325,17 @@
         const teacher = cachedTeachers[id];
         const timestamp = new Date().toLocaleString();
         
-        // Update local state memory layout instantly
+        // Update local state memory layout instantly for immediate UI response
         cachedTeachers[id].total += amount;
         renderBoard();
 
-        // 1. Safe object updates with verification token passed inside the layout structure
+        // 1. Safe object updates with verification token passed inside layout structure
         db.ref(`teachers/${id}`).transaction((currentData) => {
             if (!currentData) return currentData;
             return {
                 ...currentData,
                 total: (currentData.total || 0) + amount,
-                token_verification: savedToken // Server side rule check targets this property
+                token_verification: savedToken 
             };
         });
 
@@ -346,7 +347,7 @@
             amount: amount,
             time: timestamp,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
-            token: savedToken // Server side rule check targets this property
+            token: savedToken 
         });
 
         transactionsLoaded = false;
