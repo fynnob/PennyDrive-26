@@ -187,9 +187,11 @@
         document.getElementById('debug-token-info').innerText = `Active Token Value: "${savedToken}"`;
 
         // Check token validity securely against database path lookup
+        // Find this section inside initApplication():
         db.ref(`authorized_tokens/${savedToken}`).once('value')
         .then((snapshot) => {
-            if (snapshot.exists() && snapshot.val() === true) {
+            // UPDATED THIS LINE BELOW to accept "true" or true
+            if (snapshot.exists() && (snapshot.val() === true || snapshot.val() === "true")) {
                 isTeacher = true;
                 document.getElementById('device-status').innerText = "Teacher Mode Enabled";
                 document.getElementById('device-status').classList.add('teacher');
@@ -197,6 +199,7 @@
             }
             loadBoardData();
         })
+
         .catch(() => {
             isTeacher = false;
             loadBoardData();
