@@ -39,10 +39,15 @@
         .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         .first .badge { background: #eab308; } .second .badge { background: #94a3b8; } .third .badge { background: #b45309; }
 
-        /* Dynamic Image Avatar System */
-        .avatar-frame { width: 70px; height: 70px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #cbd5e1; display: flex; align-items: center; justify-content: center; }
-        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        /* Dynamic Image / Text Hybrid Avatar Frames */
+        .avatar-frame { width: 70px; height: 70px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
         
+        /* Fallback container for legacy emoji assets */
+        .avatar-fallback-text { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; background: #eee; }
+        .list-avatar-frame .avatar-fallback-text { font-size: 1.2rem; }
+
         .teacher-name { font-weight: bold; margin-bottom: 5px; }
         .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; }
 
@@ -51,7 +56,6 @@
         .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
         .list-item:last-child { border-bottom: none; }
         .rank-num { width: 30px; font-weight: bold; color: #888; }
-        .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #cbd5e1; }
         .list-name { flex-grow: 1; font-weight: 600; }
 
         /* Floating Developer Button Tree */
@@ -115,7 +119,7 @@
 </div>
 
 <div class="fab-group">
-    <button id="fab-teacher" class="fab-btn" onclick="openTeacherModal()" title="Add New Teacher Target Node">+</button>
+    <button id="fab-teacher" class="fab-btn" onclick="openTeacherModal()" title="Add New Teacher Node">+</button>
     <button id="fab-donation" class="fab-btn" onclick="openDonationModal()" title="Log New Contribution">+</button>
 </div>
 
@@ -191,12 +195,24 @@
     let cachedTransactions = {};
     let savedToken = "no_token_present";
 
-    // Clean public standard imagery placeholders instead of raw emojis
+    // Dynamic Image Avatar Assets
     const defaultTeachers = {
-        "t1": { id: "t1", title: "Herr", name: "Schmidt", total: 0, avatar: "https://picsum.photos/id/64/150/150" },
-        "t2": { id: "t2", title: "Ms.", name: "Gomez", total: 0, avatar: "https://picsum.photos/id/91/150/150" },
-        "t3": { id: "t3", title: "Frau", name: "Müller", total: 0, avatar: "https://picsum.photos/id/1025/150/150" }
+        "t1": { id: "t1", title: "Herr", name: "Schmidt", total: 0, avatar: "https://robohash.org/schmidt.png?set=set4" },
+        "t2": { id: "t2", title: "Ms.", name: "Gomez", total: 0, avatar: "https://robohash.org/gomez.png?set=set4" },
+        "t3": { id: "t3", title: "Frau", name: "Müller", total: 0, avatar: "https://robohash.org/muller.png?set=set4" }
     };
+
+    // SMART HELPER: Safely handles old emoji data AND new picture link assets
+    function renderAvatar(avatarString) {
+        if (!avatarString) {
+            return `<img class="avatar-img" src="https://robohash.org/placeholder.png?set=set4" alt="profile">`;
+        }
+        if (avatarString.startsWith('http://') || avatarString.startsWith('https://')) {
+            return `<img class="avatar-img" src="${avatarString}" alt="profile">`;
+        }
+        // Fallback layout if the database still contains plain text emojis from old runs
+        return `<div class="avatar-fallback-text">${avatarString}</div>`;
+    }
 
     function initApplication() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -205,7 +221,6 @@
             localStorage.setItem('pd_auth_token', urlParams.get('token').trim());
         }
         
-        // Evaluate if Dev Configuration state flag exists
         if (urlParams.get('mode') === 'dev') {
             isDev = true;
         }
@@ -220,7 +235,6 @@
                 document.getElementById('device-status').innerText = isDev ? "Developer Sandbox Enabled" : "Teacher Mode Enabled";
                 document.getElementById('device-status').classList.add('teacher');
                 
-                // Orchestrate control triggers dependent on execution context permissions
                 document.getElementById('fab-donation').style.display = 'flex';
                 if (isDev) {
                     document.getElementById('fab-teacher').style.display = 'flex';
@@ -255,7 +269,6 @@
     }
 
     function renderBoard() {
-        // Filter out soft-deleted entries
         const activeTeachers = Object.values(cachedTeachers).filter(t => !t.deleted);
         const sorted = activeTeachers.sort((a, b) => b.total - a.total);
         const grandTotal = sorted.reduce((sum, t) => sum + t.total, 0);
@@ -274,7 +287,7 @@
                     <div class="podium-spot ${classes[index]}">
                         <div class="badge">${index + 1}</div>
                         <div class="avatar-frame">
-                            <img class="avatar-img" src="${t.avatar || 'https://picsum.photos/id/1062/150/150'}" alt="profile">
+                            ${renderAvatar(t.avatar)}
                         </div>
                         <div class="teacher-name">${t.title} ${t.name} ${devEditMarkup}</div>
                         <div class="teacher-amount">$${t.total.toFixed(2)}</div>
@@ -292,7 +305,7 @@
                     <div class="list-item">
                         <div class="rank-num">#${i + 1}</div>
                         <div class="list-avatar-frame">
-                            <img class="avatar-img" src="${t.avatar || 'https://picsum.photos/id/1062/150/150'}" alt="profile">
+                            ${renderAvatar(t.avatar)}
                         </div>
                         <div class="list-name">${t.title} ${t.name} ${devEditMarkup}</div>
                         <div class="teacher-amount" style="font-size:1.1rem; margin-right:5px;">$${t.total.toFixed(2)}</div>
@@ -340,7 +353,7 @@
                     txs.reverse(); 
 
                     txs.forEach(tx => {
-                        if(tx.deleted) return; // Ignore soft-deleted transactions
+                        if(tx.deleted) return; 
                         const devEditMarkup = isDev ? `<button class="dev-edit-btn" style="display:inline-block;" onclick="openDonationModal('${tx.txKey}')">Edit</button>` : '';
                         html += `
                             <div class="tx-item">
@@ -354,7 +367,6 @@
         }
     }
 
-    // Modal Visibility Handlers
     function openDonationModal(txId = null) {
         document.getElementById('donation-modal').style.display = 'flex';
         populateTeacherDropdown();
@@ -383,7 +395,7 @@
             const t = cachedTeachers[teacherId];
             document.getElementById('teacher-title').value = t.title || '';
             document.getElementById('teacher-name').value = t.name || '';
-            document.getElementById('teacher-avatar').value = t.avatar || '';
+            document.getElementById('teacher-avatar').value = (t.avatar && t.avatar.startsWith('http')) ? t.avatar : '';
             document.getElementById('teacher-total').value = t.total || 0;
             if (isDev) document.getElementById('btn-delete-teacher').style.display = 'block';
         } else {
@@ -399,14 +411,12 @@
 
     function closeModal(modalId) {
         document.getElementById(modalId).style.display = 'none';
-        // Clear forms
         if(modalId === 'donation-modal') {
             document.getElementById('student-name').value = '';
             document.getElementById('donation-amount').value = '';
         }
     }
 
-    // Database Submission Subroutines
     function submitDonation() {
         const id = document.getElementById('modal-teacher-select').value;
         const student = document.getElementById('student-name').value.trim() || "Anonymous Student";
@@ -422,7 +432,6 @@
         const timestamp = new Date().toLocaleString();
 
         if (txId) {
-            // Processing Modification over existing Log Records
             db.ref(`transactions/${txId}`).update({
                 teacherId: id,
                 to: `${teacher.title} ${teacher.name}`,
@@ -431,7 +440,6 @@
                 token: savedToken
             });
         } else {
-            // Generating New Record Object
             db.ref('transactions').push({
                 teacherId: id,
                 to: `${teacher.title} ${teacher.name}`,
@@ -442,7 +450,6 @@
                 token: savedToken 
             });
 
-            // Adjust concurrent value on mapped child node
             db.ref(`teachers/${id}/total`).transaction((currentTotal) => {
                 return (currentTotal || 0) + amount;
             });
@@ -454,12 +461,17 @@
     function submitTeacher() {
         const title = document.getElementById('teacher-title').value.trim() || "Mr/Ms";
         const name = document.getElementById('teacher-name').value.trim() || "Anonymous";
-        const avatar = document.getElementById('teacher-avatar').value.trim() || "https://picsum.photos/id/1062/150/150";
-        const total = parseFloat(document.getElementById('teacher-total').value) || 0;
         const targetId = document.getElementById('edit-teacher-id').value;
+        
+        let avatar = document.getElementById('teacher-avatar').value.trim();
+        if (!avatar) {
+            // Generates a permanent unique placeholder profile image automatically if left blank
+            avatar = `https://robohash.org/${name.toLowerCase()}${title.toLowerCase()}.png?set=set4`;
+        }
+        
+        const total = parseFloat(document.getElementById('teacher-total').value) || 0;
 
         if (targetId) {
-            // Save updates to an existing profile
             db.ref(`teachers/${targetId}`).update({
                 title: title,
                 name: name,
@@ -468,7 +480,6 @@
                 token_verification: savedToken
             });
         } else {
-            // Push completely fresh child reference key
             const newRef = db.ref('teachers').push();
             newRef.set({
                 id: newRef.key,
@@ -482,7 +493,6 @@
         closeModal('teacher-modal');
     }
 
-    // Soft-Delete Systems to keep database operations stable
     function deleteTeacher() {
         const targetId = document.getElementById('edit-teacher-id').value;
         if (targetId && confirm("Are you sure you want to remove this teacher from the board?")) {
