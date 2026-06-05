@@ -68,29 +68,22 @@
             position: relative; 
             background: #1e293b;
             color: #ffffff; 
-            padding: 18px 24px; 
+            padding: 22px 28px; 
             border-radius: 12px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
-            min-width: 340px; 
-            max-width: 450px; 
+            width: 360px;
             font-size: 1.05rem; 
             font-weight: 500; 
-            overflow: visible; 
+            overflow: hidden; 
             animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
 
-        /* Seamless layout integration handling responsive SVG paths */
         .toast-border-svg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 1;
-        }
-        .toast-border-svg rect {
-            width: calc(100% - 3px);
-            height: calc(100% - 3px);
+            pointer-events: none; z-index: 4;
         }
 
-        /* Continuous uniform drainage sequence map across 30 seconds execution limits */
         .toast-rect-path {
             stroke-dasharray: 100;
             stroke-dashoffset: 0;
@@ -102,24 +95,39 @@
             z-index: 2;
             line-height: 1.4;
         }
+
+        /* Pixel-Grid Wave Overlay System */
+        .pixel-block {
+            position: absolute;
+            box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            z-index: 5;
+        }
+
+        /* Appearing Animation Configuration (Bottom-Left to Top-Right) */
+        .pixel-block-appear {
+            animation: pixelAnimAppear 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes pixelAnimAppear {
+            0% { opacity: 0; background-color: transparent; transform: scale(0.6); }
+            25% { opacity: 1; background-color: var(--block-color); transform: scale(1); }
+            70% { opacity: 1; background-color: #ffffff; }
+            100% { opacity: 0; background-color: transparent; }
+        }
+
+        /* Disappearing Animation Configuration (Top-Right to Bottom-Left) */
+        .pixel-block-disappear {
+            animation: pixelAnimDisappear 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes pixelAnimDisappear {
+            0% { opacity: 0; background-color: transparent; }
+            30% { opacity: 1; background-color: #ffffff; }
+            65% { opacity: 1; background-color: var(--block-color); }
+            100% { opacity: 0; background-color: transparent; }
+        }
         
         @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes drainBorder { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
-
-        /* Global Pixel Dust Particles styling */
-        .dust-particle {
-            position: fixed;
-            z-index: 10001;
-            pointer-events: none;
-            border-radius: 1px; /* Sharp edges for crisp pixel look */
-            opacity: 0;
-            animation: blowDust 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-        @keyframes blowDust {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            50% { opacity: 0.8; }
-            100% { transform: translate(var(--dx), var(--dy)) rotate(360deg) scale(0); opacity: 0; }
-        }
 
         /* Live Component Visual Flash Highlighting Animation */
         .highlight-flash { animation: cardFlash 4s ease; }
@@ -352,74 +360,98 @@
         
         toast.innerHTML = `
             <svg class="toast-border-svg">
-                <rect x="1.5" y="1.5" rx="11" fill="none" stroke="url(#rainbowGrad)" stroke-width="3" pathLength="100" class="toast-rect-path"></rect>
+                <rect rx="11" fill="none" stroke="url(#rainbowGrad)" stroke-width="6" pathLength="100" class="toast-rect-path"></rect>
             </svg>
-            <div class="toast-content">
+            <div class="toast-content" style="opacity: 0; transition: opacity 0.2s ease;">
                 <strong>${tx.student}</strong> donated <strong>$${tx.amount.toFixed(2)}</strong> to <strong>${tx.to}</strong>!
             </div>
+            <div class="pixel-grid" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5; overflow:hidden; border-radius:12px;"></div>
         `;
         
         stack.appendChild(toast);
         
+        // Measure box metrics to configure absolute inwards stroke geometry
+        const width = toast.offsetWidth;
+        const height = toast.offsetHeight;
+        const strokeWidth = 6;
+        
+        const rect = toast.querySelector('rect');
+        rect.setAttribute('x', strokeWidth / 2);
+        rect.setAttribute('y', strokeWidth / 2);
+        rect.setAttribute('width', width - strokeWidth);
+        rect.setAttribute('height', height - strokeWidth);
+
+        // Build Discrete Pixel-Grid Matrix
+        const pixelGrid = toast.querySelector('.pixel-grid');
+        const blockSize = 18; 
+        const cols = Math.ceil(width / blockSize);
+        const rows = Math.ceil(height / blockSize);
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const block = document.createElement('div');
+                block.className = 'pixel-block';
+                block.style.width = blockSize + 'px';
+                block.style.height = blockSize + 'px';
+                block.style.left = (c * blockSize) + 'px';
+                block.style.top = (r * blockSize) + 'px';
+
+                const xc = c * blockSize + blockSize / 2;
+                const yc = r * blockSize + blockSize / 2;
+
+                // Color calculation: Red in top-right, Purple in bottom-left
+                const t = (xc + (height - yc)) / (width + height);
+                const hue = (1 - t) * 280; 
+                block.style.setProperty('--block-color', `hsl(${hue}, 95%, 50%)`);
+
+                // Delay wave mapping: Bottom-Left to Top-Right sweep
+                const appearDelay = t * 0.42; 
+                block.style.animationDelay = appearDelay + 's';
+                block.classList.add('pixel-block-appear');
+
+                pixelGrid.appendChild(block);
+            }
+        }
+
+        // Reveal text canvas right as the colored shimmer rolls across
+        setTimeout(() => {
+            toast.querySelector('.toast-content').style.opacity = '1';
+        }, 220);
+
         const targetElement = document.getElementById(`card-${tx.teacherId}`);
         if (targetElement) {
             targetElement.classList.add('highlight-flash');
             setTimeout(() => { targetElement.classList.remove('highlight-flash'); }, 4100);
         }
         
-        // Disintegrate toast gracefully using pixel dust particle physics at exactly 30s
+        // Initiate Reverse Pixel-Deconstruction Sequence at exactly 30s
         setTimeout(() => {
-            dissolveToast(toast);
+            toast.querySelector('.toast-content').style.opacity = '0';
+            toast.style.transition = 'background-color 0.5s ease, box-shadow 0.5s ease';
+            toast.style.backgroundColor = 'transparent';
+            toast.style.boxShadow = 'none';
+            toast.querySelector('.toast-border-svg').style.opacity = '0';
+            toast.querySelector('.toast-border-svg').style.transition = 'opacity 0.4s ease';
+
+            const blocks = pixelGrid.querySelectorAll('.pixel-block');
+            blocks.forEach(block => {
+                block.classList.remove('pixel-block-appear');
+                
+                const bx = parseFloat(block.style.left) + blockSize / 2;
+                const by = parseFloat(block.style.top) + blockSize / 2;
+
+                // Disappearing delay mapping: Top-Right to Bottom-Left sweep
+                const tDisappear = ((width - bx) + by) / (width + height);
+                const disappearDelay = tDisappear * 0.42;
+
+                block.style.animationDelay = disappearDelay + 's';
+                void block.offsetWidth; // Force hardware reflow layout re-draw
+                block.classList.add('pixel-block-disappear');
+            });
+
+            // Wipe out item from document tree after animations finish completely
+            setTimeout(() => { toast.remove(); }, 1100);
         }, 30000); 
-    }
-
-    // JavaScript Thanos-snap particle pipeline 
-    function dissolveToast(toast) {
-        const rect = toast.getBoundingClientRect();
-        const particleCount = 110;
-        const colors = ['#1e293b', '#e40303', '#ff8c00', '#ffed00', '#008026', '#004cff', '#732982'];
-
-        // Fade container canvas out softly while breaking pieces apart
-        toast.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
-        toast.style.opacity = '0';
-        toast.style.transform = 'scale(0.96) translateY(5px)';
-
-        for (let i = 0; i < particleCount; i++) {
-            const p = document.createElement('div');
-            p.className = 'dust-particle';
-
-            // Pin random localized coordinates inside element boundaries
-            const x = rect.left + Math.random() * rect.width;
-            const y = rect.top + Math.random() * rect.height;
-
-            p.style.left = x + 'px';
-            p.style.top = y + 'px';
-
-            const size = Math.floor(Math.random() * 4) + 2; // 2px - 5px pixels
-            p.style.width = size + 'px';
-            p.style.height = size + 'px';
-
-            // Sample colors to replicate the text base or boundary rainbow strips
-            p.style.background = Math.random() > 0.4 ? '#1e293b' : colors[Math.floor(Math.random() * colors.length)];
-
-            // Random vector targets shifting pixels up and right
-            const dx = Math.random() * 160 + 50; 
-            const dy = -(Math.random() * 130 + 40); 
-            p.style.setProperty('--dx', dx + 'px');
-            p.style.setProperty('--dy', dy + 'px');
-
-            // Calculate horizontal delay coordinates to roll left-to-right disintegration sweeps
-            const relativeX = x - rect.left;
-            const waveDelay = (relativeX / rect.width) * 0.35; 
-            p.style.animationDelay = waveDelay + 's';
-
-            document.body.appendChild(p);
-
-            // Housekeeping clearance
-            setTimeout(() => { p.remove(); }, (800 + waveDelay * 1000));
-        }
-
-        setTimeout(() => { toast.remove(); }, 1000);
     }
 
     function loadBoardData() {
@@ -667,6 +699,7 @@
         closeModal('teacher-modal');
     }
 
+    // Soft-Delete tracking hooks
     function deleteTeacher() {
         const targetId = document.getElementById('edit-teacher-id').value;
         if (targetId && confirm("Are you sure you want to remove this teacher from the board?")) {
