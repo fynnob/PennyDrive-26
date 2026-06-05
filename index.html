@@ -16,7 +16,7 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; padding-bottom: 60px; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; padding-bottom: 100px; }
         .container { max-width: 800px; margin: 0 auto; }
 
         header {
@@ -29,7 +29,7 @@
         .total-raised { background: #f0fdf4; border: 2px dashed #22c55e; padding: 15px; border-radius: 12px; display: inline-block; margin-top: 15px;}
         .total-raised h2 { color: #166534; font-size: 2rem; }
 
-        /* Podium Setup */
+        /* Podium Layout */
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; padding-top: 20px; }
         .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
         .podium-spot.first { order: 2; min-height: 250px; border: 2px solid #eab308;}
@@ -43,7 +43,7 @@
         .teacher-name { font-weight: bold; margin-bottom: 5px; }
         .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; }
 
-        /* Leaderboard List */
+        /* Leaderboard Scroll Rows */
         .leaderboard-list { background: var(--card-bg); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;}
         .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
         .list-item:last-child { border-bottom: none; }
@@ -51,23 +51,42 @@
         .list-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
         .list-name { flex-grow: 1; font-weight: 600; }
 
-        /* Action Buttons */
-        .btn-add { background: #2563eb; color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: none; align-items: center; justify-content: center; }
-        .btn-add:hover { background: #1d4ed8; }
+        /* Floating Bottom Right Overlay Button */
+        .fab-overlay-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 65px;
+            height: 65px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            cursor: pointer;
+            display: none; /* Injected by token auth checks */
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            transition: transform 0.2s;
+        }
+        .fab-overlay-btn:hover { background: #1d4ed8; transform: scale(1.05); }
 
-        /* Lazy Transactions Section */
+        /* Lazy Transactions Styling */
         .transactions-section { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .btn-load-transactions { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn-load-transactions:hover { background: #374151; }
         .transaction-log { margin-top: 15px; max-height: 250px; overflow-y: auto; display: none; }
         .tx-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; font-size: 0.95rem; }
 
-        /* Modal styling */
+        /* Dialog UI elements */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #666; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn-cancel { background: #e2e8f0; }
@@ -75,6 +94,7 @@
         
         .status-badge { display: inline-block; padding: 4px 8px; background: #e2e8f0; border-radius: 12px; font-size: 0.75rem; margin-top: 5px; font-weight: bold;}
         .status-badge.teacher { background: #dcfce7; color: #166534; }
+        .debug-text { font-size: 0.75rem; color: #777; margin-top: 4px; display: block; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -82,11 +102,14 @@
 <div class="container">
     <header>
         <h1>Penny Drive Leaderboard! 🏳️‍🌈</h1>
-        <p style="color: #555; margin-top: 5px;">Losers get a pie to the face, proceeds go to LGBTQIA+ support charities!</p>
+        <p style="color: #555; margin-top: 5px;">Proceeds go to LGBTQIA+ support charities!</p>
         <div class="total-raised">
             Total Money Raised: <h2 id="grand-total">$0.00</h2>
         </div>
-        <div><span id="device-status" class="status-badge">Student View</span></div>
+        <div>
+            <span id="device-status" class="status-badge">Student View</span>
+            <span id="debug-token-info" class="debug-text">Checking URL attributes...</span>
+        </div>
     </header>
 
     <div class="podium" id="podium-container">Loading scores...</div>
@@ -99,11 +122,17 @@
     </div>
 </div>
 
+<button id="floating-add-btn" class="fab-overlay-btn" onclick="openModal()">+</button>
+
 <div class="modal-overlay" id="donation-modal">
     <div class="modal">
-        <h3 id="modal-title">Log Donation</h3>
-        <input type="hidden" id="target-teacher-id">
+        <h3>Log New Donation</h3>
+        
         <div class="form-group" style="margin-top: 15px;">
+            <label for="modal-teacher-select">Select Teacher Target Jar</label>
+            <select id="modal-teacher-select"></select>
+        </div>
+        <div class="form-group">
             <label for="student-name">Student Name</label>
             <input type="text" id="student-name" placeholder="Anonymous Student">
         </div>
@@ -113,7 +142,7 @@
         </div>
         <div class="modal-actions">
             <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-submit" onclick="submitDonation()">Submit</button>
+            <button class="btn btn-submit" onclick="submitDonation()">Submit Donation</button>
         </div>
     </div>
 </div>
@@ -135,6 +164,7 @@
     let isTeacher = false;
     let transactionsLoaded = false;
     let cachedTeachers = {};
+    let savedToken = "no_token_present";
 
     const defaultTeachers = {
         "t1": { id: "t1", title: "Herr", name: "Schmidt", total: 0, avatar: "👨‍🏫" },
@@ -144,30 +174,29 @@
         "t5": { id: "t5", title: "Mx.", name: "Turing", total: 0, avatar: "🧑‍🏫" }
     };
 
-    // LOAD DATA ON ENTRY ONLY (No constant background refreshes)
+    // SINGLE LOAD ON ENTRY
     function initApplication() {
         const urlParams = new URLSearchParams(window.location.search);
         
         if (urlParams.has('token')) {
             localStorage.setItem('pd_auth_token', urlParams.get('token'));
-            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        const savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
+        savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
+        document.getElementById('debug-token-info').innerText = `Active Token Value: "${savedToken}"`;
 
         // Check token validity securely against database path lookup
         db.ref(`authorized_tokens/${savedToken}`).once('value')
         .then((snapshot) => {
             if (snapshot.exists() && snapshot.val() === true) {
                 isTeacher = true;
-                const badge = document.getElementById('device-status');
-                badge.innerText = "Teacher Mode Enabled";
-                badge.classList.add('teacher');
+                document.getElementById('device-status').innerText = "Teacher Mode Enabled";
+                document.getElementById('device-status').classList.add('teacher');
+                document.getElementById('floating-add-btn').style.display = 'flex'; // Show fixed bottom right layout item
             }
             loadBoardData();
         })
         .catch(() => {
-            // Default to student mode if tracking rules block unauthorized path reading
             isTeacher = false;
             loadBoardData();
         });
@@ -182,6 +211,7 @@
                 cachedTeachers = snapshot.val();
             }
             renderBoard();
+            populateTeacherDropdown();
         });
     }
 
@@ -189,8 +219,6 @@
         const sorted = Object.values(cachedTeachers).sort((a, b) => b.total - a.total);
         const grandTotal = sorted.reduce((sum, t) => sum + t.total, 0);
         document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
-
-        const displayBtn = isTeacher ? 'inline-flex' : 'none';
 
         // Render Top 3 Podium
         const podiumContainer = document.getElementById('podium-container');
@@ -207,12 +235,11 @@
                         <div class="avatar">${t.avatar}</div>
                         <div class="teacher-name">${t.title} ${t.name}</div>
                         <div class="teacher-amount">$${t.total.toFixed(2)}</div>
-                        <button class="btn-add" style="display: ${displayBtn}; margin-top:10px;" onclick="openModal('${t.id}')">+</button>
                     </div>`;
             }
         });
 
-        // Render remaining list entries
+        // Render standard lists entries
         const runnersContainer = document.getElementById('runners-container');
         runnersContainer.innerHTML = '';
         if (sorted.length > 3) {
@@ -223,11 +250,17 @@
                         <div class="rank-num">#${i + 1}</div>
                         <div class="list-avatar">${t.avatar}</div>
                         <div class="list-name">${t.title} ${t.name}</div>
-                        <div class="teacher-amount" style="font-size:1.1rem; margin-right:15px;">$${t.total.toFixed(2)}</div>
-                        <button class="btn-add" style="display: ${displayBtn};" onclick="openModal('${t.id}')">+</button>
+                        <div class="teacher-amount" style="font-size:1.1rem; margin-right:5px;">$${t.total.toFixed(2)}</div>
                     </div>`;
             }
         }
+    }
+
+    function populateTeacherDropdown() {
+        const selectElement = document.getElementById('modal-teacher-select');
+        selectElement.innerHTML = Object.values(cachedTeachers)
+            .map(t => `<option value="${t.id}">${t.title} ${t.name}</option>`)
+            .join('');
     }
 
     // ON-DEMAND LAZY TRANSACTIONS LOAD
@@ -268,10 +301,7 @@
         }
     }
 
-    function openModal(id) {
-        const teacher = cachedTeachers[id];
-        document.getElementById('target-teacher-id').value = id;
-        document.getElementById('modal-title').innerText = `Add Money to ${teacher.title} ${teacher.name}'s Jar`;
+    function openModal() {
         document.getElementById('donation-modal').style.display = 'flex';
     }
 
@@ -282,7 +312,7 @@
     }
 
     function submitDonation() {
-        const id = document.getElementById('target-teacher-id').value;
+        const id = document.getElementById('modal-teacher-select').value;
         const student = document.getElementById('student-name').value.trim() || "Anonymous Student";
         const amount = parseFloat(document.getElementById('donation-amount').value);
 
@@ -294,35 +324,40 @@
         const teacher = cachedTeachers[id];
         const timestamp = new Date().toLocaleString();
         
-        // Update local memory data instantly for instant interface feedback
+        // Update local state memory layout instantly
         cachedTeachers[id].total += amount;
         renderBoard();
 
-        // Push updates up to Cloud Database
-        db.ref(`teachers/${id}/total`).transaction((currentTotal) => {
-            return (currentTotal || 0) + amount;
+        // 1. Safe object updates with verification token passed inside the layout structure
+        db.ref(`teachers/${id}`).transaction((currentData) => {
+            if (!currentData) return currentData;
+            return {
+                ...currentData,
+                total: (currentData.total || 0) + amount,
+                token_verification: savedToken // Server side rule check targets this property
+            };
         });
 
+        // 2. Logging audit tracks alongside verifying security token
         db.ref('transactions').push({
             teacherId: id,
             to: `${teacher.title} ${teacher.name}`,
             student: student,
             amount: amount,
             time: timestamp,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            token: savedToken // Server side rule check targets this property
         });
 
-        // Force reload transaction layout if open
         transactionsLoaded = false;
         if(document.getElementById('tx-log-container').style.display === 'block') {
-            toggleTransactions(); // Toggle close
-            toggleTransactions(); // Toggle open to re-fetch freshly pushed transaction array
+            toggleTransactions(); 
+            toggleTransactions(); 
         }
 
         closeModal();
     }
 
-    // Launch configuration loop on document execution
     initApplication();
 </script>
 </body>
