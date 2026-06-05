@@ -32,14 +32,17 @@
         /* Podium Layout */
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; padding-top: 20px; }
         .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
-        .podium-spot.first { order: 2; min-height: 250px; border: 2px solid #eab308;}
-        .podium-spot.second { order: 1; min-height: 210px; border: 2px solid #cbd5e1;}
-        .podium-spot.third { order: 3; min-height: 180px; border: 2px solid #b45309;}
+        .podium-spot.first { order: 2; min-height: 270px; border: 2px solid #eab308;}
+        .podium-spot.second { order: 1; min-height: 230px; border: 2px solid #cbd5e1;}
+        .podium-spot.third { order: 3; min-height: 200px; border: 2px solid #b45309;}
 
         .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         .first .badge { background: #eab308; } .second .badge { background: #94a3b8; } .third .badge { background: #b45309; }
 
-        .avatar { width: 65px; height: 65px; border-radius: 50%; background: #eee; margin: 10px auto; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        /* Dynamic Image Avatar System */
+        .avatar-frame { width: 70px; height: 70px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #cbd5e1; display: flex; align-items: center; justify-content: center; }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        
         .teacher-name { font-weight: bold; margin-bottom: 5px; }
         .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; }
 
@@ -48,38 +51,26 @@
         .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
         .list-item:last-child { border-bottom: none; }
         .rank-num { width: 30px; font-weight: bold; color: #888; }
-        .list-avatar { width: 40px; height: 40px; border-radius: 50%; background: #eee; margin-right: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #cbd5e1; }
         .list-name { flex-grow: 1; font-weight: 600; }
 
-        /* Floating Bottom Right Overlay Button */
-        .fab-overlay-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 65px;
-            height: 65px;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 2rem;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-            cursor: pointer;
-            display: none; 
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            transition: transform 0.2s;
-        }
-        .fab-overlay-btn:hover { background: #1d4ed8; transform: scale(1.05); }
+        /* Floating Developer Button Tree */
+        .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
+        .fab-btn { width: 60px; height: 60px; color: white; border: none; border-radius: 50%; font-size: 1.6rem; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.2s; }
+        .fab-btn:hover { transform: scale(1.08); }
+        #fab-teacher { background: #16a34a; }
+        #fab-donation { background: #2563eb; }
+
+        /* Inline Dev Editing Buttons */
+        .dev-edit-btn { background: #6b7280; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; margin-left: 8px; display: none; }
+        .dev-edit-btn:hover { background: #4b5563; }
 
         /* Lazy Transactions Styling */
         .transactions-section { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .btn-load-transactions { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn-load-transactions:hover { background: #374151; }
         .transaction-log { margin-top: 15px; max-height: 250px; overflow-y: auto; display: none; }
-        .tx-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; font-size: 0.95remrem; }
+        .tx-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
 
         /* Dialog UI elements */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
@@ -87,10 +78,11 @@
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #666; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn-cancel { background: #e2e8f0; }
         .btn-submit { background: #16a34a; color: white; }
+        .btn-delete { background: #dc2626; color: white; margin-right: auto; }
         
         .status-badge { display: inline-block; padding: 4px 8px; background: #e2e8f0; border-radius: 12px; font-size: 0.75rem; margin-top: 5px; font-weight: bold;}
         .status-badge.teacher { background: #dcfce7; color: #166534; }
@@ -122,11 +114,15 @@
     </div>
 </div>
 
-<button id="floating-add-btn" class="fab-overlay-btn" onclick="openModal()">+</button>
+<div class="fab-group">
+    <button id="fab-teacher" class="fab-btn" onclick="openTeacherModal()" title="Add New Teacher Target Node">+</button>
+    <button id="fab-donation" class="fab-btn" onclick="openDonationModal()" title="Log New Contribution">+</button>
+</div>
 
 <div class="modal-overlay" id="donation-modal">
     <div class="modal">
-        <h3>Log New Donation</h3>
+        <h3 id="donation-modal-title">Log New Donation</h3>
+        <input type="hidden" id="edit-tx-id" value="">
         
         <div class="form-group" style="margin-top: 15px;">
             <label for="modal-teacher-select">Select Teacher Target Jar</label>
@@ -138,20 +134,50 @@
         </div>
         <div class="form-group">
             <label for="donation-amount">Amount ($)</label>
-            <input type="number" id="donation-amount" step="0.01" min="0.01" placeholder="0.00">
+            <input type="number" id="donation-amount" step="0.01" min="0.00" placeholder="0.00">
         </div>
         <div class="modal-actions">
-            <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-submit" onclick="submitDonation()">Submit Donation</button>
+            <button id="btn-delete-tx" class="btn btn-delete" onclick="deleteTransaction()" style="display:none;">Delete</button>
+            <button class="btn btn-cancel" onclick="closeModal('donation-modal')">Cancel</button>
+            <button class="btn btn-submit" onclick="submitDonation()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="teacher-modal">
+    <div class="modal">
+        <h3 id="teacher-modal-title">Add New Teacher</h3>
+        <input type="hidden" id="edit-teacher-id" value="">
+        
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="teacher-title">Honorific Prefix (Title)</label>
+            <input type="text" id="teacher-title" placeholder="e.g. Mr., Ms., Dr.">
+        </div>
+        <div class="form-group">
+            <label for="teacher-name">Surname (Last Name)</label>
+            <input type="text" id="teacher-name" placeholder="e.g. Smith">
+        </div>
+        <div class="form-group">
+            <label for="teacher-avatar">Avatar Image URL</label>
+            <input type="url" id="teacher-avatar" placeholder="https://example.com/image.jpg">
+        </div>
+        <div class="form-group">
+            <label for="teacher-total">Balance Total ($)</label>
+            <input type="number" id="teacher-total" step="0.01" value="0.00">
+        </div>
+        <div class="modal-actions">
+            <button id="btn-delete-teacher" class="btn btn-delete" onclick="deleteTeacher()" style="display:none;">Remove</button>
+            <button class="btn btn-cancel" onclick="closeModal('teacher-modal')">Cancel</button>
+            <button class="btn btn-submit" onclick="submitTeacher()">Save Profile</button>
         </div>
     </div>
 </div>
 
 <script>
     const firebaseConfig = {
-        apiKey: "PASTE_YOUR_API_KEY_HERE", // Just copy-paste your web API key here
+        apiKey: "PASTE_YOUR_API_KEY_HERE",
         authDomain: "pennydrive26.firebaseapp.com",
-        databaseURL: "https://pennydrive26-default-rtdb.europe-west1.firebasedatabase.app/", // FIXED REGION URL
+        databaseURL: "https://pennydrive26-default-rtdb.europe-west1.firebasedatabase.app/",
         projectId: "pennydrive26"
     };
 
@@ -159,16 +185,17 @@
     const db = firebase.database();
 
     let isTeacher = false;
+    let isDev = false;
     let transactionsLoaded = false;
     let cachedTeachers = {};
+    let cachedTransactions = {};
     let savedToken = "no_token_present";
 
+    // Clean public standard imagery placeholders instead of raw emojis
     const defaultTeachers = {
-        "t1": { id: "t1", title: "Herr", name: "Schmidt", total: 0, avatar: "👨‍🏫" },
-        "t2": { id: "t2", title: "Ms.", name: "Gomez", total: 0, avatar: "👩‍🏫" },
-        "t3": { id: "t3", title: "Frau", name: "Müller", total: 0, avatar: "👩‍🏫" },
-        "t4": { id: "t4", title: "Mr.", name: "Blackwood", total: 0, avatar: "👨‍🏫" },
-        "t5": { id: "t5", title: "Mx.", name: "Turing", total: 0, avatar: "🧑‍🏫" }
+        "t1": { id: "t1", title: "Herr", name: "Schmidt", total: 0, avatar: "https://picsum.photos/id/64/150/150" },
+        "t2": { id: "t2", title: "Ms.", name: "Gomez", total: 0, avatar: "https://picsum.photos/id/91/150/150" },
+        "t3": { id: "t3", title: "Frau", name: "Müller", total: 0, avatar: "https://picsum.photos/id/1025/150/150" }
     };
 
     function initApplication() {
@@ -177,41 +204,43 @@
         if (urlParams.has('token')) {
             localStorage.setItem('pd_auth_token', urlParams.get('token').trim());
         }
+        
+        // Evaluate if Dev Configuration state flag exists
+        if (urlParams.get('mode') === 'dev') {
+            isDev = true;
+        }
 
         savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
-        document.getElementById('debug-token-info').innerText = `Active Token Value: "${savedToken}"`;
+        document.getElementById('debug-token-info').innerText = `Active Token: "${savedToken}" | Dev Mode: ${isDev.toString().toUpperCase()}`;
 
-        // Check token validity against database path lookup
         db.ref(`authorized_tokens/${savedToken}`).once('value')
         .then((snapshot) => {
             if (snapshot.exists() && (snapshot.val() === true || snapshot.val() === "true")) {
                 isTeacher = true;
-                document.getElementById('device-status').innerText = "Teacher Mode Enabled";
+                document.getElementById('device-status').innerText = isDev ? "Developer Sandbox Enabled" : "Teacher Mode Enabled";
                 document.getElementById('device-status').classList.add('teacher');
-                document.getElementById('floating-add-btn').style.display = 'flex'; 
+                
+                // Orchestrate control triggers dependent on execution context permissions
+                document.getElementById('fab-donation').style.display = 'flex';
+                if (isDev) {
+                    document.getElementById('fab-teacher').style.display = 'flex';
+                }
             }
             loadBoardData();
         })
         .catch((error) => {
-            // Securely drops unauthenticated users or wrong tokens right into student view
-            console.log("Token unauthorized or wrong. Viewing as Student.");
+            console.log("Unauthenticated token signature. Running default views.");
             isTeacher = false;
             loadBoardData();
         });
     }
 
     function loadBoardData() {
-        db.ref('teachers').once('value')
-        .then((snapshot) => {
+        db.ref('teachers').on('value', (snapshot) => {
             if (!snapshot.exists()) {
-                // If database is blank, populate teacher children individually 
-                // so we don't violate parent-level write protections
                 if (isTeacher) {
                     Object.keys(defaultTeachers).forEach(id => {
-                        db.ref(`teachers/${id}`).set({
-                            ...defaultTeachers[id],
-                            token_verification: savedToken
-                        });
+                        db.ref(`teachers/${id}`).set({ ...defaultTeachers[id], token_verification: savedToken });
                     });
                     cachedTeachers = defaultTeachers;
                 } else {
@@ -222,15 +251,13 @@
             }
             renderBoard();
             populateTeacherDropdown();
-        })
-        .catch((error) => {
-            console.error("Failed downloading leaderboard numbers:", error);
-            document.getElementById('podium-container').innerText = "Database connection error.";
         });
     }
 
     function renderBoard() {
-        const sorted = Object.values(cachedTeachers).sort((a, b) => b.total - a.total);
+        // Filter out soft-deleted entries
+        const activeTeachers = Object.values(cachedTeachers).filter(t => !t.deleted);
+        const sorted = activeTeachers.sort((a, b) => b.total - a.total);
         const grandTotal = sorted.reduce((sum, t) => sum + t.total, 0);
         document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
 
@@ -242,11 +269,14 @@
         layoutOrder.forEach((index) => {
             const t = sorted[index];
             if (t) {
+                const devEditMarkup = isDev ? `<button class="dev-edit-btn" style="display:inline-block;" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
                 podiumContainer.innerHTML += `
                     <div class="podium-spot ${classes[index]}">
                         <div class="badge">${index + 1}</div>
-                        <div class="avatar">${t.avatar}</div>
-                        <div class="teacher-name">${t.title} ${t.name}</div>
+                        <div class="avatar-frame">
+                            <img class="avatar-img" src="${t.avatar || 'https://picsum.photos/id/1062/150/150'}" alt="profile">
+                        </div>
+                        <div class="teacher-name">${t.title} ${t.name} ${devEditMarkup}</div>
                         <div class="teacher-amount">$${t.total.toFixed(2)}</div>
                     </div>`;
             }
@@ -257,11 +287,14 @@
         if (sorted.length > 3) {
             for (let i = 3; i < sorted.length; i++) {
                 const t = sorted[i];
+                const devEditMarkup = isDev ? `<button class="dev-edit-btn" style="display:inline-block;" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
                 runnersContainer.innerHTML += `
                     <div class="list-item">
                         <div class="rank-num">#${i + 1}</div>
-                        <div class="list-avatar">${t.avatar}</div>
-                        <div class="list-name">${t.title} ${t.name}</div>
+                        <div class="list-avatar-frame">
+                            <img class="avatar-img" src="${t.avatar || 'https://picsum.photos/id/1062/150/150'}" alt="profile">
+                        </div>
+                        <div class="list-name">${t.title} ${t.name} ${devEditMarkup}</div>
                         <div class="teacher-amount" style="font-size:1.1rem; margin-right:5px;">$${t.total.toFixed(2)}</div>
                     </div>`;
             }
@@ -271,6 +304,7 @@
     function populateTeacherDropdown() {
         const selectElement = document.getElementById('modal-teacher-select');
         selectElement.innerHTML = Object.values(cachedTeachers)
+            .filter(t => !t.deleted)
             .map(t => `<option value="${t.id}">${t.title} ${t.name}</option>`)
             .join('');
     }
@@ -287,96 +321,188 @@
             btn.innerText = "Hide Transactions";
             
             if (!transactionsLoaded) {
-                db.ref('transactions').orderByChild('timestamp').once('value')
-                .then((snapshot) => {
+                db.ref('transactions').orderByChild('timestamp').on('value', (snapshot) => {
                     transactionsLoaded = true;
                     if (!snapshot.exists()) {
                         container.innerHTML = `<p style="color:#aaa; font-style:italic;">No transactions logged yet.</p>`;
                         return;
                     }
                     
+                    cachedTransactions = snapshot.val();
                     let html = '';
                     const txs = [];
-                    snapshot.forEach(child => { txs.push(child.val()); });
+                    
+                    snapshot.forEach(child => { 
+                        let data = child.val();
+                        data.txKey = child.key;
+                        txs.push(data); 
+                    });
                     txs.reverse(); 
 
                     txs.forEach(tx => {
+                        if(tx.deleted) return; // Ignore soft-deleted transactions
+                        const devEditMarkup = isDev ? `<button class="dev-edit-btn" style="display:inline-block;" onclick="openDonationModal('${tx.txKey}')">Edit</button>` : '';
                         html += `
                             <div class="tx-item">
-                                <span><strong>$${tx.amount.toFixed(2)}</strong> from ${tx.student} to <strong>${tx.to}</strong></span>
+                                <span><strong>$${tx.amount.toFixed(2)}</strong> from ${tx.student} to <strong>${tx.to}</strong> ${devEditMarkup}</span>
                                 <span style="color:#888; font-size:0.8rem;">${tx.time}</span>
                             </div>`;
                     });
                     container.innerHTML = html;
-                })
-                .catch((err) => {
-                    console.error("Audit log read error:", err);
                 });
             }
         }
     }
 
-    function openModal() {
+    // Modal Visibility Handlers
+    function openDonationModal(txId = null) {
         document.getElementById('donation-modal').style.display = 'flex';
+        populateTeacherDropdown();
+        
+        if (txId) {
+            document.getElementById('donation-modal-title').innerText = "Edit Transaction Log";
+            document.getElementById('edit-tx-id').value = txId;
+            const tx = cachedTransactions[txId];
+            document.getElementById('modal-teacher-select').value = tx.teacherId || '';
+            document.getElementById('student-name').value = tx.student || '';
+            document.getElementById('donation-amount').value = tx.amount || 0;
+            if (isDev) document.getElementById('btn-delete-tx').style.display = 'block';
+        } else {
+            document.getElementById('donation-modal-title').innerText = "Log New Donation";
+            document.getElementById('edit-tx-id').value = '';
+            document.getElementById('btn-delete-tx').style.display = 'none';
+        }
     }
 
-    function closeModal() {
-        document.getElementById('donation-modal').style.display = 'none';
-        document.getElementById('student-name').value = '';
-        document.getElementById('donation-amount').value = '';
+    function openTeacherModal(teacherId = null) {
+        document.getElementById('teacher-modal').style.display = 'flex';
+        
+        if (teacherId) {
+            document.getElementById('teacher-modal-title').innerText = "Modify Teacher Profile";
+            document.getElementById('edit-teacher-id').value = teacherId;
+            const t = cachedTeachers[teacherId];
+            document.getElementById('teacher-title').value = t.title || '';
+            document.getElementById('teacher-name').value = t.name || '';
+            document.getElementById('teacher-avatar').value = t.avatar || '';
+            document.getElementById('teacher-total').value = t.total || 0;
+            if (isDev) document.getElementById('btn-delete-teacher').style.display = 'block';
+        } else {
+            document.getElementById('teacher-modal-title').innerText = "Add New Teacher Target Node";
+            document.getElementById('edit-teacher-id').value = '';
+            document.getElementById('teacher-title').value = '';
+            document.getElementById('teacher-name').value = '';
+            document.getElementById('teacher-avatar').value = '';
+            document.getElementById('teacher-total').value = 0.00;
+            document.getElementById('btn-delete-teacher').style.display = 'none';
+        }
     }
 
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        // Clear forms
+        if(modalId === 'donation-modal') {
+            document.getElementById('student-name').value = '';
+            document.getElementById('donation-amount').value = '';
+        }
+    }
+
+    // Database Submission Subroutines
     function submitDonation() {
         const id = document.getElementById('modal-teacher-select').value;
         const student = document.getElementById('student-name').value.trim() || "Anonymous Student";
         const amount = parseFloat(document.getElementById('donation-amount').value);
+        const txId = document.getElementById('edit-tx-id').value;
 
-        if (isNaN(amount) || amount <= 0) {
-            alert("Please enter a valid dollar amount.");
+        if (isNaN(amount) || amount < 0) {
+            alert("Please input a standard positive numerical value.");
             return;
         }
 
         const teacher = cachedTeachers[id];
         const timestamp = new Date().toLocaleString();
-        
-        cachedTeachers[id].total += amount;
-        renderBoard();
 
-        // Transaction handles state mutations concurrently and supplies a backup dictionary
-        // item framework during fast local client sweeps
-        db.ref(`teachers/${id}`).transaction((currentData) => {
-            if (!currentData) {
-                const baseState = cachedTeachers[id] || { id: id, total: 0 };
-                return {
-                    ...baseState,
-                    total: baseState.total + amount,
-                    token_verification: savedToken
-                };
-            }
-            return {
-                ...currentData,
-                total: (currentData.total || 0) + amount,
-                token_verification: savedToken 
-            };
-        });
+        if (txId) {
+            // Processing Modification over existing Log Records
+            db.ref(`transactions/${txId}`).update({
+                teacherId: id,
+                to: `${teacher.title} ${teacher.name}`,
+                student: student,
+                amount: amount,
+                token: savedToken
+            });
+        } else {
+            // Generating New Record Object
+            db.ref('transactions').push({
+                teacherId: id,
+                to: `${teacher.title} ${teacher.name}`,
+                student: student,
+                amount: amount,
+                time: timestamp,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                token: savedToken 
+            });
 
-        db.ref('transactions').push({
-            teacherId: id,
-            to: `${teacher.title} ${teacher.name}`,
-            student: student,
-            amount: amount,
-            time: timestamp,
-            timestamp: firebase.database.ServerValue.TIMESTAMP,
-            token: savedToken 
-        });
-
-        transactionsLoaded = false;
-        if(document.getElementById('tx-log-container').style.display === 'block') {
-            toggleTransactions(); 
-            toggleTransactions(); 
+            // Adjust concurrent value on mapped child node
+            db.ref(`teachers/${id}/total`).transaction((currentTotal) => {
+                return (currentTotal || 0) + amount;
+            });
         }
 
-        closeModal();
+        closeModal('donation-modal');
+    }
+
+    function submitTeacher() {
+        const title = document.getElementById('teacher-title').value.trim() || "Mr/Ms";
+        const name = document.getElementById('teacher-name').value.trim() || "Anonymous";
+        const avatar = document.getElementById('teacher-avatar').value.trim() || "https://picsum.photos/id/1062/150/150";
+        const total = parseFloat(document.getElementById('teacher-total').value) || 0;
+        const targetId = document.getElementById('edit-teacher-id').value;
+
+        if (targetId) {
+            // Save updates to an existing profile
+            db.ref(`teachers/${targetId}`).update({
+                title: title,
+                name: name,
+                avatar: avatar,
+                total: total,
+                token_verification: savedToken
+            });
+        } else {
+            // Push completely fresh child reference key
+            const newRef = db.ref('teachers').push();
+            newRef.set({
+                id: newRef.key,
+                title: title,
+                name: name,
+                avatar: avatar,
+                total: total,
+                token_verification: savedToken
+            });
+        }
+        closeModal('teacher-modal');
+    }
+
+    // Soft-Delete Systems to keep database operations stable
+    function deleteTeacher() {
+        const targetId = document.getElementById('edit-teacher-id').value;
+        if (targetId && confirm("Are you sure you want to remove this teacher from the board?")) {
+            db.ref(`teachers/${targetId}`).update({
+                deleted: true,
+                token_verification: savedToken
+            });
+            closeModal('teacher-modal');
+        }
+    }
+
+    function deleteTransaction() {
+        const txId = document.getElementById('edit-tx-id').value;
+        if (txId && confirm("Are you sure you want to delete this transaction record?")) {
+            db.ref(`transactions/${txId}`).update({
+                deleted: true,
+                token: savedToken
+            });
+            closeModal('donation-modal');
+        }
     }
 
     initApplication();
