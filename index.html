@@ -66,7 +66,7 @@
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
             cursor: pointer;
-            display: none; /* Injected by token auth checks */
+            display: none; 
             align-items: center;
             justify-content: center;
             z-index: 999;
@@ -148,7 +148,6 @@
 </div>
 
 <script>
-    // Replace placeholders with your real Firebase Project configurations
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -175,22 +174,18 @@
         "t5": { id: "t5", title: "Mx.", name: "Turing", total: 0, avatar: "🧑‍🏫" }
     };
 
-    // SINGLE LOAD ON ENTRY
     function initApplication() {
         const urlParams = new URLSearchParams(window.location.search);
         
         if (urlParams.has('token')) {
-            localStorage.setItem('pd_auth_token', urlParams.get('token'));
+            localStorage.setItem('pd_auth_token', urlParams.get('token').trim());
         }
 
         savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
         document.getElementById('debug-token-info').innerText = `Active Token Value: "${savedToken}"`;
 
-        // Check token validity securely against database path lookup
-        // Find this section inside initApplication():
         db.ref(`authorized_tokens/${savedToken}`).once('value')
         .then((snapshot) => {
-            // UPDATED THIS LINE BELOW to accept "true" or true
             if (snapshot.exists() && (snapshot.val() === true || snapshot.val() === "true")) {
                 isTeacher = true;
                 document.getElementById('device-status').innerText = "Teacher Mode Enabled";
@@ -199,8 +194,8 @@
             }
             loadBoardData();
         })
-
-        .catch(() => {
+        .catch((error) => {
+            console.error("Token authentication lookup encountered an error:", error);
             isTeacher = false;
             loadBoardData();
         });
@@ -209,8 +204,20 @@
     function loadBoardData() {
         db.ref('teachers').once('value', (snapshot) => {
             if (!snapshot.exists()) {
-                db.ref('teachers').set(defaultTeachers);
-                cachedTeachers = defaultTeachers;
+                if (isTeacher) {
+                    // FIX: Populate empty DB child-by-child with verification tokens included 
+                    // to satisfy the security rule framework
+                    Object.keys(defaultTeachers).forEach(id => {
+                        db.ref(`teachers/${id}`).set({
+                            ...defaultTeachers[id],
+                            token_verification: savedToken
+                        });
+                    });
+                    cachedTeachers = defaultTeachers;
+                } else {
+                    // Fallback local visual structure if database hasn't been set up yet
+                    cachedTeachers = defaultTeachers;
+                }
             } else {
                 cachedTeachers = snapshot.val();
             }
@@ -224,7 +231,6 @@
         const grandTotal = sorted.reduce((sum, t) => sum + t.total, 0);
         document.getElementById('grand-total').innerText = `$${grandTotal.toFixed(2)}`;
 
-        // Render Top 3 Podium
         const podiumContainer = document.getElementById('podium-container');
         podiumContainer.innerHTML = '';
         const layoutOrder = [1, 0, 2]; 
@@ -243,7 +249,6 @@
             }
         });
 
-        // Render standard lists entries
         const runnersContainer = document.getElementById('runners-container');
         runnersContainer.innerHTML = '';
         if (sorted.length > 3) {
@@ -267,7 +272,6 @@
             .join('');
     }
 
-    // ON-DEMAND LAZY TRANSACTIONS LOAD
     function toggleTransactions() {
         const container = document.getElementById('tx-log-container');
         const btn = document.getElementById('load-tx-btn');
@@ -328,13 +332,20 @@
         const teacher = cachedTeachers[id];
         const timestamp = new Date().toLocaleString();
         
-        // Update local state memory layout instantly for immediate UI response
         cachedTeachers[id].total += amount;
         renderBoard();
 
-        // 1. Safe object updates with verification token passed inside layout structure
+        // FIX: Provide structural fallback values for initial uncached local client sweeps
+        // to prevent rule validation write failures
         db.ref(`teachers/${id}`).transaction((currentData) => {
-            if (!currentData) return currentData;
+            if (!currentData) {
+                const baseState = cachedTeachers[id] || { id: id, total: 0 };
+                return {
+                    ...baseState,
+                    total: baseState.total + amount,
+                    token_verification: savedToken
+                };
+            }
             return {
                 ...currentData,
                 total: (currentData.total || 0) + amount,
@@ -342,7 +353,6 @@
             };
         });
 
-        // 2. Logging audit tracks alongside verifying security token
         db.ref('transactions').push({
             teacherId: id,
             to: `${teacher.title} ${teacher.name}`,
