@@ -17,21 +17,26 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; padding-bottom: 100px; }
-        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* Expanded container optimization to give columns maximal room */
+        .container { max-width: 1000px; margin: 0 auto; }
 
+        /* Compact Inline Header Layout */
         header {
-            position: relative; background: var(--card-bg); padding: 30px; 
-            border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            position: relative; background: var(--card-bg); padding: 20px 30px; 
+            border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             margin-bottom: 30px; overflow: hidden;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
         }
         header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--rainbow-gradient); }
+        header h1 { font-size: 2rem; margin: 0; }
         
-        .total-raised { background: #f0fdf4; border: 2px dashed #22c55e; padding: 15px; border-radius: 12px; display: inline-block; margin-top: 15px;}
-        .total-raised h2 { color: #166534; font-size: 2rem; }
+        .total-raised { background: #f0fdf4; border: 2px dashed #22c55e; padding: 10px 20px; border-radius: 12px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
+        .total-raised h2 { color: #166534; font-size: 1.8rem; margin: 0; display: inline-block; }
 
         /* Podium Layout */
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; padding-top: 20px; }
-        .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; }
+        .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; transition: transform 0.3s, background-color 0.3s; }
         .podium-spot.first { order: 2; min-height: 270px; border: 2px solid #eab308;}
         .podium-spot.second { order: 1; min-height: 230px; border: 2px solid #cbd5e1;}
         .podium-spot.third { order: 3; min-height: 200px; border: 2px solid #b45309;}
@@ -39,24 +44,40 @@
         .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         .first .badge { background: #eab308; } .second .badge { background: #94a3b8; } .third .badge { background: #b45309; }
 
-        /* Dynamic Image / Text Hybrid Avatar Frames */
-        .avatar-frame { width: 70px; height: 70px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        /* Dynamic Image Avatar Frames */
+        .avatar-frame { width: 75px; height: 75px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
         .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        
-        /* Fallback container for legacy emoji assets */
         .avatar-fallback-text { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; background: #eee; }
         .list-avatar-frame .avatar-fallback-text { font-size: 1.2rem; }
 
-        .teacher-name { font-weight: bold; margin-bottom: 5px; }
+        .teacher-name { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; }
 
         /* Leaderboard Scroll Rows */
         .leaderboard-list { background: var(--card-bg); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;}
-        .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: transform 0.3s, background-color 0.3s; border-radius: 8px; }
         .list-item:last-child { border-bottom: none; }
         .rank-num { width: 30px; font-weight: bold; color: #888; }
-        .list-name { flex-grow: 1; font-weight: 600; }
+        .list-name { flex-grow: 1; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+
+        /* Live Notification Toast Stack System */
+        .notification-container { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column-reverse; gap: 12px; z-index: 10000; pointer-events: none; }
+        .toast { pointer-events: auto; position: relative; background: #1e293b; color: #ffffff; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); min-width: 320px; max-width: 450px; font-size: 1.05rem; font-weight: 500; overflow: hidden; border-left: 5px solid #22c55e; animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-bar { position: absolute; top: 0; left: 0; height: 4px; background: #22c55e; width: 100%; animation: toastProgress 4s linear forwards; }
+        
+        @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+        @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+
+        /* Live Component Visual Flash Highlighting Animation */
+        .highlight-flash { animation: cardFlash 4s ease; }
+        @keyframes cardFlash {
+            0% { transform: scale(1); }
+            10% { transform: scale(1.04); box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); border-color: #22c55e; background: #f0fdf4; }
+            90% { transform: scale(1.04); box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); border-color: #22c55e; background: #f0fdf4; }
+            100% { transform: scale(1); }
+        }
 
         /* Floating Developer Button Tree */
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
@@ -66,7 +87,7 @@
         #fab-donation { background: #2563eb; }
 
         /* Inline Dev Editing Buttons */
-        .dev-edit-btn { background: #6b7280; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; margin-left: 8px; display: none; }
+        .dev-edit-btn { background: #6b7280; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         .dev-edit-btn:hover { background: #4b5563; }
 
         /* Lazy Transactions Styling */
@@ -87,31 +108,24 @@
         .btn-cancel { background: #e2e8f0; }
         .btn-submit { background: #16a34a; color: white; }
         .btn-delete { background: #dc2626; color: white; margin-right: auto; }
-        
-        .status-badge { display: inline-block; padding: 4px 8px; background: #e2e8f0; border-radius: 12px; font-size: 0.75rem; margin-top: 5px; font-weight: bold;}
-        .status-badge.teacher { background: #dcfce7; color: #166534; }
-        .debug-text { font-size: 0.75rem; color: #777; margin-top: 4px; display: block; font-family: monospace; }
     </style>
 </head>
 <body>
 
+<div id="notification-stack" class="notification-container"></div>
+
 <div class="container">
     <header>
         <h1>Penny Drive Leaderboard! 🏳️‍🌈</h1>
-        <p style="color: #555; margin-top: 5px;">Proceeds go to LGBTQIA+ support charities!</p>
         <div class="total-raised">
             Total Money Raised: <h2 id="grand-total">$0.00</h2>
-        </div>
-        <div>
-            <span id="device-status" class="status-badge">Student View</span>
-            <span id="debug-token-info" class="debug-text">Checking URL attributes...</span>
         </div>
     </header>
 
     <div class="podium" id="podium-container">Loading scores...</div>
     <div class="leaderboard-list" id="runners-container"></div>
 
-    <div class="transactions-section">
+    <div class="transactions-section" id="audit-log-section">
         <h3>Audit Log</h3>
         <button class="btn-load-transactions" id="load-tx-btn" onclick="toggleTransactions()">Show All Transactions</button>
         <div class="transaction-log" id="tx-log-container">Loading transactions...</div>
@@ -190,19 +204,18 @@
 
     let isTeacher = false;
     let isDev = false;
+    let isBoard = false;
     let transactionsLoaded = false;
     let cachedTeachers = {};
     let cachedTransactions = {};
     let savedToken = "no_token_present";
 
-    // Dynamic Image Avatar Assets
     const defaultTeachers = {
         "t1": { id: "t1", title: "Herr", name: "Schmidt", total: 0, avatar: "https://robohash.org/schmidt.png?set=set4" },
         "t2": { id: "t2", title: "Ms.", name: "Gomez", total: 0, avatar: "https://robohash.org/gomez.png?set=set4" },
         "t3": { id: "t3", title: "Frau", name: "Müller", total: 0, avatar: "https://robohash.org/muller.png?set=set4" }
     };
 
-    // SMART HELPER: Safely handles old emoji data AND new picture link assets
     function renderAvatar(avatarString) {
         if (!avatarString) {
             return `<img class="avatar-img" src="https://robohash.org/placeholder.png?set=set4" alt="profile">`;
@@ -210,31 +223,41 @@
         if (avatarString.startsWith('http://') || avatarString.startsWith('https://')) {
             return `<img class="avatar-img" src="${avatarString}" alt="profile">`;
         }
-        // Fallback layout if the database still contains plain text emojis from old runs
         return `<div class="avatar-fallback-text">${avatarString}</div>`;
     }
 
     function initApplication() {
         const urlParams = new URLSearchParams(window.location.search);
+        let clearTokenFromUrl = false;
         
+        // 1. Capture and save token across transitions
         if (urlParams.has('token')) {
             localStorage.setItem('pd_auth_token', urlParams.get('token').trim());
+            urlParams.delete('token'); // clear parameter trace
+            clearTokenFromUrl = true;
         }
         
-        if (urlParams.get('mode') === 'dev') {
-            isDev = true;
+        if (urlParams.get('mode') === 'dev') isDev = true;
+        if (urlParams.get('mode') === 'board') isBoard = true;
+
+        // 2. Erase plain text token parameter from view history
+        if (clearTokenFromUrl) {
+            const remainingQuery = urlParams.toString() ? '?' + urlParams.toString() : '';
+            window.history.replaceState({}, document.title, window.location.pathname + remainingQuery);
         }
 
         savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
-        document.getElementById('debug-token-info').innerText = `Active Token: "${savedToken}" | Dev Mode: ${isDev.toString().toUpperCase()}`;
+
+        // Evaluate runtime configurations
+        if (isBoard) {
+            document.getElementById('audit-log-section').style.display = 'none';
+            initLiveNotificationStream();
+        }
 
         db.ref(`authorized_tokens/${savedToken}`).once('value')
         .then((snapshot) => {
             if (snapshot.exists() && (snapshot.val() === true || snapshot.val() === "true")) {
                 isTeacher = true;
-                document.getElementById('device-status').innerText = isDev ? "Developer Sandbox Enabled" : "Teacher Mode Enabled";
-                document.getElementById('device-status').classList.add('teacher');
-                
                 document.getElementById('fab-donation').style.display = 'flex';
                 if (isDev) {
                     document.getElementById('fab-teacher').style.display = 'flex';
@@ -243,10 +266,51 @@
             loadBoardData();
         })
         .catch((error) => {
-            console.log("Unauthenticated token signature. Running default views.");
             isTeacher = false;
             loadBoardData();
         });
+    }
+
+    // Connect real-time callback hooks to display alerts on active board configurations
+    function initLiveNotificationStream() {
+        const appConnectionTime = Date.now();
+        
+        db.ref('transactions').orderByChild('timestamp').startAt(appConnectionTime)
+        .on('child_added', (snapshot) => {
+            const tx = snapshot.val();
+            if (tx && !tx.deleted) {
+                triggerLiveNotification(tx);
+            }
+        });
+    }
+
+    function triggerLiveNotification(tx) {
+        const stack = document.getElementById('notification-stack');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        
+        toast.innerHTML = `
+            <div class="toast-bar"></div>
+            <span><strong>${tx.student}</strong> donated <strong>$${tx.amount.toFixed(2)}</strong> to <strong>${tx.to}</strong>!</span>
+        `;
+        
+        // Flex column-reverse appends elements to the top of the viewport
+        stack.appendChild(toast);
+        
+        // Locate matching module components on layout grid to apply temporary flash classes
+        const targetElement = document.getElementById(`card-${tx.teacherId}`);
+        if (targetElement) {
+            targetElement.classList.add('highlight-flash');
+            setTimeout(() => {
+                targetElement.classList.remove('highlight-flash');
+            }, 4100);
+        }
+        
+        // Orchestrate animation dismissals
+        setTimeout(() => {
+            toast.style.animation = 'toastOut 0.4s ease forwards';
+            setTimeout(() => { toast.remove(); }, 400);
+        }, 4000);
     }
 
     function loadBoardData() {
@@ -282,14 +346,14 @@
         layoutOrder.forEach((index) => {
             const t = sorted[index];
             if (t) {
-                const devEditMarkup = isDev ? `<button class="dev-edit-btn" style="display:inline-block;" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
+                const devEditMarkup = isDev ? `<button class="dev-edit-btn" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
                 podiumContainer.innerHTML += `
-                    <div class="podium-spot ${classes[index]}">
+                    <div class="podium-spot ${classes[index]}" id="card-${t.id}">
                         <div class="badge">${index + 1}</div>
                         <div class="avatar-frame">
                             ${renderAvatar(t.avatar)}
                         </div>
-                        <div class="teacher-name">${t.title} ${t.name} ${devEditMarkup}</div>
+                        <div class="teacher-name"><span>${t.title} ${t.name}</span> ${devEditMarkup}</div>
                         <div class="teacher-amount">$${t.total.toFixed(2)}</div>
                     </div>`;
             }
@@ -300,14 +364,14 @@
         if (sorted.length > 3) {
             for (let i = 3; i < sorted.length; i++) {
                 const t = sorted[i];
-                const devEditMarkup = isDev ? `<button class="dev-edit-btn" style="display:inline-block;" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
+                const devEditMarkup = isDev ? `<button class="dev-edit-btn" onclick="openTeacherModal('${t.id}')">Edit</button>` : '';
                 runnersContainer.innerHTML += `
-                    <div class="list-item">
+                    <div class="list-item" id="card-${t.id}">
                         <div class="rank-num">#${i + 1}</div>
                         <div class="list-avatar-frame">
                             ${renderAvatar(t.avatar)}
                         </div>
-                        <div class="list-name">${t.title} ${t.name} ${devEditMarkup}</div>
+                        <div class="list-name"><span>${t.title} ${t.name}</span> ${devEditMarkup}</div>
                         <div class="teacher-amount" style="font-size:1.1rem; margin-right:5px;">$${t.total.toFixed(2)}</div>
                     </div>`;
             }
@@ -316,10 +380,12 @@
 
     function populateTeacherDropdown() {
         const selectElement = document.getElementById('modal-teacher-select');
-        selectElement.innerHTML = Object.values(cachedTeachers)
-            .filter(t => !t.deleted)
-            .map(t => `<option value="${t.id}">${t.title} ${t.name}</option>`)
-            .join('');
+        if(selectElement) {
+            selectElement.innerHTML = Object.values(cachedTeachers)
+                .filter(t => !t.deleted)
+                .map(t => `<option value="${t.id}">${t.title} ${t.name}</option>`)
+                .join('');
+        }
     }
 
     function toggleTransactions() {
@@ -354,7 +420,7 @@
 
                     txs.forEach(tx => {
                         if(tx.deleted) return; 
-                        const devEditMarkup = isDev ? `<button class="dev-edit-btn" style="display:inline-block;" onclick="openDonationModal('${tx.txKey}')">Edit</button>` : '';
+                        const devEditMarkup = isDev ? `<button class="dev-edit-btn" onclick="openDonationModal('${tx.txKey}')">Edit</button>` : '';
                         html += `
                             <div class="tx-item">
                                 <span><strong>$${tx.amount.toFixed(2)}</strong> from ${tx.student} to <strong>${tx.to}</strong> ${devEditMarkup}</span>
@@ -465,7 +531,6 @@
         
         let avatar = document.getElementById('teacher-avatar').value.trim();
         if (!avatar) {
-            // Generates a permanent unique placeholder profile image automatically if left blank
             avatar = `https://robohash.org/${name.toLowerCase()}${title.toLowerCase()}.png?set=set4`;
         }
         
