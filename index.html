@@ -79,7 +79,7 @@
         .btn-load-transactions { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn-load-transactions:hover { background: #374151; }
         .transaction-log { margin-top: 15px; max-height: 250px; overflow-y: auto; display: none; }
-        .tx-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; font-size: 0.95rem; }
+        .tx-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; font-size: 0.95remrem; }
 
         /* Dialog UI elements */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
@@ -148,15 +148,11 @@
 </div>
 
 <script>
-    // Remember to double check these match your exact Firebase project settings panel!
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "PASTE_YOUR_API_KEY_HERE", // Just copy-paste your web API key here
+        authDomain: "pennydrive26.firebaseapp.com",
+        databaseURL: "https://pennydrive26-default-rtdb.europe-west1.firebasedatabase.app/", // FIXED REGION URL
+        projectId: "pennydrive26"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -185,6 +181,7 @@
         savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
         document.getElementById('debug-token-info').innerText = `Active Token Value: "${savedToken}"`;
 
+        // Check token validity against database path lookup
         db.ref(`authorized_tokens/${savedToken}`).once('value')
         .then((snapshot) => {
             if (snapshot.exists() && (snapshot.val() === true || snapshot.val() === "true")) {
@@ -196,7 +193,8 @@
             loadBoardData();
         })
         .catch((error) => {
-            console.error("Token verification check failed:", error);
+            // Securely drops unauthenticated users or wrong tokens right into student view
+            console.log("Token unauthorized or wrong. Viewing as Student.");
             isTeacher = false;
             loadBoardData();
         });
@@ -206,13 +204,14 @@
         db.ref('teachers').once('value')
         .then((snapshot) => {
             if (!snapshot.exists()) {
-                // If DB is completely clean and a teacher visits first, populate default entries
+                // If database is blank, populate teacher children individually 
+                // so we don't violate parent-level write protections
                 if (isTeacher) {
                     Object.keys(defaultTeachers).forEach(id => {
                         db.ref(`teachers/${id}`).set({
                             ...defaultTeachers[id],
                             token_verification: savedToken
-                        }).catch(e => console.error(`Failed initializing teacher child ${id}:`, e));
+                        });
                     });
                     cachedTeachers = defaultTeachers;
                 } else {
@@ -225,8 +224,8 @@
             populateTeacherDropdown();
         })
         .catch((error) => {
-            console.error("Error downloading 'teachers' collection root node:", error);
-            document.getElementById('podium-container').innerText = "Failed loading scores. Check browser console logs.";
+            console.error("Failed downloading leaderboard numbers:", error);
+            document.getElementById('podium-container').innerText = "Database connection error.";
         });
     }
 
@@ -311,8 +310,7 @@
                     container.innerHTML = html;
                 })
                 .catch((err) => {
-                    console.error("Error reading log track updates:", err);
-                    container.innerHTML = `<p style="color:red;">Error loading historical data tracks.</p>`;
+                    console.error("Audit log read error:", err);
                 });
             }
         }
@@ -344,6 +342,8 @@
         cachedTeachers[id].total += amount;
         renderBoard();
 
+        // Transaction handles state mutations concurrently and supplies a backup dictionary
+        // item framework during fast local client sweeps
         db.ref(`teachers/${id}`).transaction((currentData) => {
             if (!currentData) {
                 const baseState = cachedTeachers[id] || { id: id, total: 0 };
