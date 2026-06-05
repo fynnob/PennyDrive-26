@@ -66,6 +66,7 @@
         .toast { 
             pointer-events: auto; 
             position: relative; 
+            background: #1e293b;
             color: #ffffff; 
             padding: 18px 24px; 
             border-radius: 12px; 
@@ -74,27 +75,26 @@
             max-width: 450px; 
             font-size: 1.05rem; 
             font-weight: 500; 
-            overflow: hidden; 
+            overflow: visible; 
             animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
         }
 
-        /* Hardware accelerated conic seamless spinner background layer */
-        .toast::before {
-            content: '';
+        /* Seamless layout integration handling responsive SVG paths */
+        .toast-border-svg {
             position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: conic-gradient(#e40303, #ff8c00, #ffed00, #008026, #004cff, #732982, #e40303);
-            animation: perimeterRotate 30s linear forwards;
-            z-index: 0;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+        .toast-border-svg rect {
+            width: calc(100% - 3px);
+            height: calc(100% - 3px);
         }
 
-        /* Inner canvas center mask to format precise 3px outline border geometry */
-        .toast-inner {
-            position: absolute;
-            top: 3px; left: 3px; right: 3px; bottom: 3px;
-            background: #1e293b;
-            border-radius: 9px;
-            z-index: 1;
+        /* Continuous uniform drainage sequence map across 30 seconds execution limits */
+        .toast-rect-path {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 0;
+            animation: drainBorder 30s linear forwards;
         }
 
         .toast-content {
@@ -104,8 +104,22 @@
         }
         
         @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
-        @keyframes perimeterRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes drainBorder { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
+
+        /* Global Pixel Dust Particles styling */
+        .dust-particle {
+            position: fixed;
+            z-index: 10001;
+            pointer-events: none;
+            border-radius: 1px; /* Sharp edges for crisp pixel look */
+            opacity: 0;
+            animation: blowDust 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes blowDust {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { transform: translate(var(--dx), var(--dy)) rotate(360deg) scale(0); opacity: 0; }
+        }
 
         /* Live Component Visual Flash Highlighting Animation */
         .highlight-flash { animation: cardFlash 4s ease; }
@@ -149,7 +163,20 @@
 </head>
 <body>
 
-<div id="notification-stack" class="notification-container"></div>
+<div id="notification-stack" class="notification-container">
+    <svg style="position: absolute; width: 0; height: 0; overflow: hidden;">
+        <defs>
+            <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#e40303" />
+                <stop offset="20%" stop-color="#ff8c00" />
+                <stop offset="40%" stop-color="#ffed00" />
+                <stop offset="60%" stop-color="#008026" />
+                <stop offset="80%" stop-color="#004cff" />
+                <stop offset="100%" stop-color="#732982" />
+            </linearGradient>
+        </defs>
+    </svg>
+</div>
 
 <div class="container">
     <header>
@@ -292,8 +319,6 @@
         .then((snapshot) => {
             if (snapshot.exists() && (snapshot.val() === true || snapshot.val() === "true")) {
                 isTeacher = true;
-                
-                // Never mount UI action controls if running a public projection screen layout
                 if (!isBoard) {
                     document.getElementById('fab-donation').style.display = 'flex';
                     if (isDev) {
@@ -311,7 +336,6 @@
 
     function initLiveNotificationStream() {
         const appConnectionTime = Date.now();
-        
         db.ref('transactions').orderByChild('timestamp').startAt(appConnectionTime)
         .on('child_added', (snapshot) => {
             const tx = snapshot.val();
@@ -327,7 +351,9 @@
         toast.className = 'toast';
         
         toast.innerHTML = `
-            <div class="toast-inner"></div>
+            <svg class="toast-border-svg">
+                <rect x="1.5" y="1.5" rx="11" fill="none" stroke="url(#rainbowGrad)" stroke-width="3" pathLength="100" class="toast-rect-path"></rect>
+            </svg>
             <div class="toast-content">
                 <strong>${tx.student}</strong> donated <strong>$${tx.amount.toFixed(2)}</strong> to <strong>${tx.to}</strong>!
             </div>
@@ -341,11 +367,59 @@
             setTimeout(() => { targetElement.classList.remove('highlight-flash'); }, 4100);
         }
         
-        // Extended countdown lifecycle set to exactly 30 seconds
+        // Disintegrate toast gracefully using pixel dust particle physics at exactly 30s
         setTimeout(() => {
-            toast.style.animation = 'toastOut 0.4s ease forwards';
-            setTimeout(() => { toast.remove(); }, 400);
+            dissolveToast(toast);
         }, 30000); 
+    }
+
+    // JavaScript Thanos-snap particle pipeline 
+    function dissolveToast(toast) {
+        const rect = toast.getBoundingClientRect();
+        const particleCount = 110;
+        const colors = ['#1e293b', '#e40303', '#ff8c00', '#ffed00', '#008026', '#004cff', '#732982'];
+
+        // Fade container canvas out softly while breaking pieces apart
+        toast.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'scale(0.96) translateY(5px)';
+
+        for (let i = 0; i < particleCount; i++) {
+            const p = document.createElement('div');
+            p.className = 'dust-particle';
+
+            // Pin random localized coordinates inside element boundaries
+            const x = rect.left + Math.random() * rect.width;
+            const y = rect.top + Math.random() * rect.height;
+
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
+
+            const size = Math.floor(Math.random() * 4) + 2; // 2px - 5px pixels
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+
+            // Sample colors to replicate the text base or boundary rainbow strips
+            p.style.background = Math.random() > 0.4 ? '#1e293b' : colors[Math.floor(Math.random() * colors.length)];
+
+            // Random vector targets shifting pixels up and right
+            const dx = Math.random() * 160 + 50; 
+            const dy = -(Math.random() * 130 + 40); 
+            p.style.setProperty('--dx', dx + 'px');
+            p.style.setProperty('--dy', dy + 'px');
+
+            // Calculate horizontal delay coordinates to roll left-to-right disintegration sweeps
+            const relativeX = x - rect.left;
+            const waveDelay = (relativeX / rect.width) * 0.35; 
+            p.style.animationDelay = waveDelay + 's';
+
+            document.body.appendChild(p);
+
+            // Housekeeping clearance
+            setTimeout(() => { p.remove(); }, (800 + waveDelay * 1000));
+        }
+
+        setTimeout(() => { toast.remove(); }, 1000);
     }
 
     function loadBoardData() {
