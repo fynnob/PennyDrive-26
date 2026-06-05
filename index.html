@@ -148,6 +148,7 @@
 </div>
 
 <script>
+    // Remember to double check these match your exact Firebase project settings panel!
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -195,27 +196,26 @@
             loadBoardData();
         })
         .catch((error) => {
-            console.error("Token authentication lookup encountered an error:", error);
+            console.error("Token verification check failed:", error);
             isTeacher = false;
             loadBoardData();
         });
     }
 
     function loadBoardData() {
-        db.ref('teachers').once('value', (snapshot) => {
+        db.ref('teachers').once('value')
+        .then((snapshot) => {
             if (!snapshot.exists()) {
+                // If DB is completely clean and a teacher visits first, populate default entries
                 if (isTeacher) {
-                    // FIX: Populate empty DB child-by-child with verification tokens included 
-                    // to satisfy the security rule framework
                     Object.keys(defaultTeachers).forEach(id => {
                         db.ref(`teachers/${id}`).set({
                             ...defaultTeachers[id],
                             token_verification: savedToken
-                        });
+                        }).catch(e => console.error(`Failed initializing teacher child ${id}:`, e));
                     });
                     cachedTeachers = defaultTeachers;
                 } else {
-                    // Fallback local visual structure if database hasn't been set up yet
                     cachedTeachers = defaultTeachers;
                 }
             } else {
@@ -223,6 +223,10 @@
             }
             renderBoard();
             populateTeacherDropdown();
+        })
+        .catch((error) => {
+            console.error("Error downloading 'teachers' collection root node:", error);
+            document.getElementById('podium-container').innerText = "Failed loading scores. Check browser console logs.";
         });
     }
 
@@ -284,7 +288,8 @@
             btn.innerText = "Hide Transactions";
             
             if (!transactionsLoaded) {
-                db.ref('transactions').orderByChild('timestamp').once('value', (snapshot) => {
+                db.ref('transactions').orderByChild('timestamp').once('value')
+                .then((snapshot) => {
                     transactionsLoaded = true;
                     if (!snapshot.exists()) {
                         container.innerHTML = `<p style="color:#aaa; font-style:italic;">No transactions logged yet.</p>`;
@@ -304,6 +309,10 @@
                             </div>`;
                     });
                     container.innerHTML = html;
+                })
+                .catch((err) => {
+                    console.error("Error reading log track updates:", err);
+                    container.innerHTML = `<p style="color:red;">Error loading historical data tracks.</p>`;
                 });
             }
         }
@@ -335,8 +344,6 @@
         cachedTeachers[id].total += amount;
         renderBoard();
 
-        // FIX: Provide structural fallback values for initial uncached local client sweeps
-        // to prevent rule validation write failures
         db.ref(`teachers/${id}`).transaction((currentData) => {
             if (!currentData) {
                 const baseState = cachedTeachers[id] || { id: id, total: 0 };
