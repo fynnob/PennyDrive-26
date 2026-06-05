@@ -121,42 +121,22 @@
 <script>
     // 1. YOUR FIREBASE CONFIGURATION
     const firebaseConfig = {
-      apiKey: "AIzaSyDhRYOITsnUJxkpiKddP2bZRJRlllYkxJk",
-      authDomain: "pennydrive26.firebaseapp.com",
-      databaseURL: "https://pennydrive26-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "pennydrive26",
-      storageBucket: "pennydrive26.firebasestorage.app",
-      messagingSenderId: "161120076673",
-      appId: "1:161120076673:web:347186ca8882391d2a9e80"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
     };
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. TOKEN & SECURITY CONFIGURATION
-    const SECRET_TEACHER_TOKEN = "CHANGE_THIS_TO_YOUR_128_BIT_TOKEN_STRING";
     let isTeacher = false;
     let transactionsLoaded = false;
-
-    // Check for token initialization rules
-    function checkAuthorization() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('token')) {
-            const token = urlParams.get('token');
-            localStorage.setItem('pd_auth_token', token);
-            // Clean up the URL query parameter so students don't see it
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        const savedToken = localStorage.getItem('pd_auth_token');
-        if (savedToken === SECRET_TEACHER_TOKEN) {
-            isTeacher = true;
-            const badge = document.getElementById('device-status');
-            badge.innerText = "Teacher Mode Enabled";
-            badge.classList.add('teacher');
-        }
-    }
+    let cachedTeachers = {};
 
     // Default seed setup if database is completely blank
     const defaultTeachers = {
@@ -167,12 +147,49 @@
         "t5": { id: "t5", title: "Mx.", name: "Turing", total: 0, avatar: "🧑‍🏫" }
     };
 
-    let cachedTeachers = {};
+    // 2. RUN LIVE PERMISSION CHECK ON STARTUP
+    function runPermissionCheck() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // If a token is provided in the URL, save it
+        if (urlParams.has('token')) {
+            localStorage.setItem('pd_auth_token', urlParams.get('token'));
+            // Instantly clean the URL bar so over-the-shoulder students can't copy it
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
 
-    // 3. REALTIME DATA SYNC (Load Teacher board instantly)
+        const savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
+
+        // Attempt a live test write to a protected path named after our token
+        db.ref(`write_test/${savedToken}`).set({
+            ping: true,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        })
+        .then(() => {
+            // SUCCESS: The database rules allowed this write, meaning the token is valid!
+            isTeacher = true;
+            
+            // Clean up the test write path immediately
+            db.ref(`write_test/${savedToken}`).remove();
+
+            // Update status UI layout
+            const badge = document.getElementById('device-status');
+            badge.innerText = "Teacher Mode Enabled";
+            badge.classList.add('teacher');
+
+            // Force a fresh render to display the plus buttons
+            renderBoard();
+        })
+        .catch((error) => {
+            // FAILURE: Database rules blocked the write (invalid token or student device)
+            isTeacher = false;
+            renderBoard();
+        });
+    }
+
+    // 3. REALTIME BOARD LISTENER
     db.ref('teachers').on('value', (snapshot) => {
         if (!snapshot.exists()) {
-            // Seed base configuration data if database is fresh
             db.ref('teachers').set(defaultTeachers);
             return;
         }
@@ -187,10 +204,10 @@
 
         const displayBtn = isTeacher ? 'inline-flex' : 'none';
 
-        // Render Top 3 Podium Cards
+        // Render Top 3 Podium
         const podiumContainer = document.getElementById('podium-container');
         podiumContainer.innerHTML = '';
-        const layoutOrder = [1, 0, 2]; // 2nd, 1st, 3rd visually
+        const layoutOrder = [1, 0, 2]; // Visually displays as: 2nd, 1st, 3rd
         const classes = ['first', 'second', 'third'];
 
         layoutOrder.forEach((index) => {
@@ -207,7 +224,7 @@
             }
         });
 
-        // Render standard scroll table rows for everyone else
+        // Render remaining list entries
         const runnersContainer = document.getElementById('runners-container');
         runnersContainer.innerHTML = '';
         if (sorted.length > 3) {
@@ -225,7 +242,7 @@
         }
     }
 
-    // 4. LAZY LOADING LOGIC FOR TRANSACTIONS
+    // 4. LAZY LOADING TRANSACTIONS
     function toggleTransactions() {
         const container = document.getElementById('tx-log-container');
         const btn = document.getElementById('load-tx-btn');
@@ -237,7 +254,6 @@
             container.style.display = 'block';
             btn.innerText = "Hide Transactions";
             
-            // Lazy load from Firebase on first click demand
             if (!transactionsLoaded) {
                 db.ref('transactions').orderByChild('timestamp').on('value', (snapshot) => {
                     transactionsLoaded = true;
@@ -249,7 +265,7 @@
                     let html = '';
                     const txs = [];
                     snapshot.forEach(child => { txs.push(child.val()); });
-                    txs.reverse(); // Newest transactions on top
+                    txs.reverse(); // Display latest transactions first
 
                     txs.forEach(tx => {
                         html += `
@@ -264,7 +280,7 @@
         }
     }
 
-    // 5. WRITE TRANSACTIONS AND ATOMIC SUMS
+    // 5. WRITE TRANSACTIONS AND UPDATE TOTALS
     function openModal(id) {
         const teacher = cachedTeachers[id];
         document.getElementById('target-teacher-id').value = id;
@@ -291,12 +307,12 @@
         const teacher = cachedTeachers[id];
         const timestamp = new Date().toLocaleString();
         
-        // Step A: Safely increment database values using atomic transaction math
+        // Increment teacher total safely in the cloud
         db.ref(`teachers/${id}/total`).transaction((currentTotal) => {
             return (currentTotal || 0) + amount;
         });
 
-        // Step B: Log the transaction trail entry
+        // Append to full tracking audit log node
         db.ref('transactions').push({
             teacherId: id,
             to: `${teacher.title} ${teacher.name}`,
@@ -309,8 +325,8 @@
         closeModal();
     }
 
-    // Run authentication evaluation cycle on page presentation
-    checkAuthorization();
+    // Trigger permission calculation loop immediately on page delivery
+    runPermissionCheck();
 </script>
 </body>
 </html>
