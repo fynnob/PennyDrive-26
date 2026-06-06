@@ -16,9 +16,9 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; padding-bottom: 100px; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; padding-bottom: 100px; overflow-x: hidden; }
         
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
 
         /* Compact Inline Header Layout */
         header {
@@ -35,30 +35,58 @@
 
         /* Podium Layout */
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; padding-top: 20px; }
-        .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; transition: transform 0.3s, background-color 0.3s; }
+        .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; transition: transform 0.3s, background-color 0.3s, min-height 0.3s, padding 0.3s; }
         .podium-spot.first { order: 2; min-height: 270px; border: 2px solid #eab308;}
         .podium-spot.second { order: 1; min-height: 230px; border: 2px solid #cbd5e1;}
         .podium-spot.third { order: 3; min-height: 200px; border: 2px solid #b45309;}
 
-        .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.3s, height 0.3s, font-size 0.3s, top 0.3s; }
         .first .badge { background: #eab308; } .second .badge { background: #94a3b8; } .third .badge { background: #b45309; }
 
         /* Dynamic Image Avatar Frames */
-        .avatar-frame { width: 75px; height: 75px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
-        .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .avatar-frame { width: 75px; height: 75px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; transition: width 0.3s, height 0.3s, margin 0.3s; }
+        .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; transition: width 0.3s, height 0.3s, margin-right 0.3s; }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .avatar-fallback-text { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; background: #eee; }
         .list-avatar-frame .avatar-fallback-text { font-size: 1.2rem; }
 
-        .teacher-name { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; }
+        .teacher-name { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: font-size 0.3s, margin-bottom 0.3s; }
+        .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; transition: font-size 0.3s; }
 
         /* Leaderboard Scroll Rows */
-        .leaderboard-list { background: var(--card-bg); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px;}
-        .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: transform 0.3s, background-color 0.3s; border-radius: 8px; }
+        .leaderboard-list { background: var(--card-bg); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; transition: padding 0.3s; }
+        .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: transform 0.3s, background-color 0.3s, padding 0.3s; border-radius: 8px; }
         .list-item:last-child { border-bottom: none; }
-        .rank-num { width: 30px; font-weight: bold; color: #888; }
-        .list-name { flex-grow: 1; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .rank-num { width: 30px; font-weight: bold; color: #888; transition: width 0.3s, font-size 0.3s; }
+        .list-name { flex-grow: 1; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: font-size 0.3s; }
+
+        /* ------------------------------------
+           1. PROJECTOR BOARD SCALE MODIFIERS
+        ------------------------------------ */
+        body.board-mode { background-color: #f1f5f9; }
+        body.board-mode .container { max-width: 1350px; padding: 20px 0; }
+        body.board-mode header { padding: 35px 50px; border-radius: 24px; }
+        body.board-mode header h1 { font-size: 3.5rem; }
+        body.board-mode .total-raised { padding: 15px 35px; border-radius: 20px; }
+        body.board-mode .total-raised h2 { font-size: 3.2rem; }
+        
+        body.board-mode .podium { gap: 30px; margin-bottom: 60px; padding-top: 40px; }
+        body.board-mode .podium-spot { border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        body.board-mode .podium-spot.first { min-height: 460px; }
+        body.board-mode .podium-spot.second { min-height: 390px; }
+        body.board-mode .podium-spot.third { min-height: 330px; }
+        
+        body.board-mode .badge { width: 55px; height: 55px; font-size: 1.8rem; top: -26px; }
+        body.board-mode .avatar-frame { width: 160px; height: 160px; margin: 20px auto; border-width: 3px; }
+        body.board-mode .teacher-name { font-size: 2.2rem; margin-bottom: 12px; }
+        body.board-mode .teacher-amount { font-size: 2.8rem; }
+        
+        body.board-mode .leaderboard-list { padding: 30px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
+        body.board-mode .list-item { padding: 24px 20px; }
+        body.board-mode .rank-num { width: 70px; font-size: 2rem; }
+        body.board-mode .list-avatar-frame { width: 90px; height: 90px; margin-right: 30px; }
+        body.board-mode .list-name { font-size: 2.1rem; }
+        body.board-mode .list-item .teacher-amount { font-size: 2.4rem; }
 
         /* Bottom-Right Notification Toast Stack System */
         .notification-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column-reverse; gap: 12px; z-index: 10000; pointer-events: none; }
@@ -68,36 +96,39 @@
             position: relative; 
             background: transparent; 
             color: #ffffff; 
-            padding: 26px 32px; 
+            padding: 30px 36px; /* Room for thickened inward lines */
             border-radius: 12px; 
-            width: 360px;
-            font-size: 1.05rem; 
+            width: 380px;
+            font-size: 1.1rem; 
             font-weight: 500; 
             overflow: hidden; 
             animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
-            
-            /* OPTION 3 IMPLEMENTATION: Maintain an open transparent shadow layout shape */
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0); 
             transition: background-color 0s, box-shadow 0.5s ease; 
         }
 
+        /* Scaled up alert layout configurations when board filters are active */
+        body.board-mode .toast { width: 480px; padding: 40px 45px; font-size: 1.5rem; border-radius: 18px; }
+
         .toast.revealed {
             background: #1e293b;
-            
-            /* Fluid alpha channel transition bloom completely isolated from layout reflow runs */
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
+        /* ------------------------------------
+           2. BLENDED CORNER PROGRESS DESIGN
+        ------------------------------------ */
         .toast-border-svg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 4;
             opacity: 0;
+            /* Integrated blur adjustments to bleed line profile elements into the card framework */
+            filter: blur(2.5px) drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+            transition: opacity 0.4s ease;
         }
 
-        .toast.revealed .toast-border-svg {
-            opacity: 1;
-        }
+        .toast.revealed .toast-border-svg { opacity: 1; }
 
         .toast.revealed .toast-rect-path {
             stroke-dasharray: 100;
@@ -105,31 +136,15 @@
             animation: drainBorder 30s linear forwards;
         }
 
-        .toast-content {
-            position: relative;
-            z-index: 2;
-            line-height: 1.4;
-            opacity: 0;
-        }
+        .toast-content { position: relative; z-index: 2; line-height: 1.4; opacity: 0; }
+        .toast.revealed .toast-content { opacity: 1; }
 
-        .toast.revealed .toast-content {
-            opacity: 1;
-        }
+        .pixel-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; overflow: hidden; border-radius: 12px; }
+        body.board-mode .pixel-grid { border-radius: 18px; }
+        
+        .pixel-block { position: absolute; opacity: 0; background-color: transparent; }
 
-        .pixel-grid {
-            position: absolute; 
-            top: 0; left: 0; width: 100%; height: 100%; 
-            pointer-events: none; z-index: 5; 
-            overflow: hidden; border-radius: 12px;
-        }
-
-        .pixel-block {
-            position: absolute;
-            opacity: 0;
-            background-color: transparent;
-        }
-
-        /* Enter Wave Progression mapping Rules */
+        /* Enter Sequence (Invisible -> Rainbow -> White -> Clear) Bottom-Left to Top-Right */
         .pixel-grid.appear .pixel-block {
             animation: pixelAnimAppear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
             animation-delay: var(--delay-appear);
@@ -143,7 +158,7 @@
             100% { opacity: 0; background-color: transparent; }
         }
 
-        /* Exit Wave Progression mapping Rules */
+        /* Exit Sequence (Clear -> White -> Rainbow -> Invisible) Top-Right to Bottom-Left */
         .pixel-grid.disappear .pixel-block {
             animation: pixelAnimDisappear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
             animation-delay: var(--delay-disappear);
@@ -157,14 +172,15 @@
             100% { opacity: 0; background-color: transparent; }
         }
         
+        @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes drainBorder { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
 
         /* Live Component Visual Flash Highlighting Animation */
         .highlight-flash { animation: cardFlash 4s ease; }
         @keyframes cardFlash {
             0% { transform: scale(1); }
-            10% { transform: scale(1.04); box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); border-color: #22c55e; background: #f0fdf4; }
-            90% { transform: scale(1.04); box-shadow: 0 0 30px rgba(34, 197, 94, 0.6); border-color: #22c55e; background: #f0fdf4; }
+            10% { transform: scale(1.04); box-shadow: 0 0 35px rgba(34, 197, 94, 0.7); border-color: #22c55e; background: #f0fdf4; }
+            90% { transform: scale(1.04); box-shadow: 0 0 35px rgba(34, 197, 94, 0.7); border-color: #22c55e; background: #f0fdf4; }
             100% { transform: scale(1); }
         }
 
@@ -180,7 +196,7 @@
         .dev-edit-btn:hover { background: #4b5563; }
 
         /* Lazy Transactions Styling */
-        .transactions-section { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .transactions-section { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; z-index: 1; }
         .btn-load-transactions { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn-load-transactions:hover { background: #374151; }
         .transaction-log { margin-top: 15px; max-height: 250px; overflow-y: auto; display: none; }
@@ -200,6 +216,8 @@
     </style>
 </head>
 <body>
+
+<canvas id="bg-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none;"></canvas>
 
 <div id="notification-stack" class="notification-container">
     <svg style="position: absolute; width: 0; height: 0; overflow: hidden;">
@@ -339,7 +357,10 @@
         }
         
         if (urlParams.get('mode') === 'dev') isDev = true;
-        if (urlParams.get('mode') === 'board') isBoard = true;
+        if (urlParams.get('mode') === 'board') {
+            isBoard = true;
+            document.body.classList.add('board-mode');
+        }
 
         if (clearTokenFromUrl) {
             const remainingQuery = urlParams.toString() ? '?' + urlParams.toString() : '';
@@ -347,6 +368,9 @@
         }
 
         savedToken = localStorage.getItem('pd_auth_token') || 'no_token_present';
+
+        // Mount background hardware-accelerated node canvas thread
+        initBackgroundConstellation();
 
         if (isBoard) {
             document.getElementById('audit-log-section').style.display = 'none';
@@ -372,6 +396,73 @@
         });
     }
 
+    // Canvas particle orchestration script
+    function initBackgroundConstellation() {
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let w = canvas.width = window.innerWidth;
+        let h = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        });
+
+        const nodes = [];
+        const totalNodes = 45;
+        const maxDist = 145;
+
+        for (let i = 0; i < totalNodes; i++) {
+            const hue = (i / totalNodes) * 360;
+            nodes.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                vx: (Math.random() - 0.5) * 0.7,
+                vy: (Math.random() - 0.5) * 0.7,
+                r: Math.random() * 2.5 + 3,
+                color: `hsl(${hue}, 85%, 65%)`,
+                hue: hue
+            });
+        }
+
+        function drawField() {
+            ctx.clearRect(0, 0, w, h);
+
+            // Redraw positions and apply screen wrap boundaries
+            nodes.forEach(n => {
+                n.x += n.vx; n.y += n.vy;
+                if (n.x < -20) n.x = w + 20; if (n.x > w + 20) n.x = -20;
+                if (n.y < -20) n.y = h + 20; if (n.y > h + 20) n.y = -20;
+
+                ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+                ctx.fillStyle = n.color;
+                ctx.shadowBlur = 8; ctx.shadowColor = n.color;
+                ctx.fill(); ctx.shadowBlur = 0;
+            });
+
+            // Map and blend interconnected linear edge segments
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const n1 = nodes[i]; const n2 = nodes[j];
+                    const dx = n1.x - n2.x; const dy = n1.y - n2.y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+
+                    if (d < maxDist) {
+                        const opacity = 1 - (d / maxDist);
+                        const edgeGrad = ctx.createLinearGradient(n1.x, n1.y, n2.x, n2.y);
+                        edgeGrad.addColorStop(0, `hsla(${n1.hue}, 85%, 65%, ${opacity * 0.8})`);
+                        edgeGrad.addColorStop(1, `hsla(${n2.hue}, 85%, 65%, ${opacity * 0.8})`);
+
+                        ctx.beginPath(); ctx.moveTo(n1.x, n1.y); ctx.lineTo(n2.x, n2.y);
+                        ctx.strokeStyle = edgeGrad; ctx.lineWidth = 1.2; ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(drawField);
+        }
+        drawField();
+    }
+
     function initLiveNotificationStream() {
         const appConnectionTime = Date.now();
         db.ref('transactions').orderByChild('timestamp').startAt(appConnectionTime)
@@ -390,7 +481,7 @@
         
         toast.innerHTML = `
             <svg class="toast-border-svg">
-                <rect rx="11" fill="none" stroke="url(#rainbowGrad)" stroke-width="10" pathLength="100" class="toast-rect-path"></rect>
+                <rect fill="none" stroke="url(#rainbowGrad)" stroke-width="10" pathLength="100" class="toast-rect-path"></rect>
             </svg>
             <div class="toast-content">
                 <strong>${tx.student}</strong> donated <strong>$${tx.amount.toFixed(2)}</strong> to <strong>${tx.to}</strong>!
@@ -404,14 +495,16 @@
         const height = toast.offsetHeight;
         const strokeWidth = 10;
         
+        // Compute inner stroke alignment geometry to perfectly anchor the corners
         const rect = toast.querySelector('rect');
         rect.setAttribute('x', strokeWidth / 2);
         rect.setAttribute('y', strokeWidth / 2);
         rect.setAttribute('width', width - strokeWidth);
         rect.setAttribute('height', height - strokeWidth);
+        rect.setAttribute('rx', (isBoard ? 18 : 12) - strokeWidth / 2);
 
         const pixelGrid = toast.querySelector('.pixel-grid');
-        const blockSize = 18; 
+        const blockSize = isBoard ? 24 : 18; 
         const cols = Math.ceil(width / blockSize);
         const rows = Math.ceil(height / blockSize);
 
@@ -441,7 +534,7 @@
             }
         }
 
-        // SWAP 1: Unhide elements smoothly under the 100% full shield layer
+        // SWAP 1: Unhide elements seamlessly under full 100% sheet cover
         setTimeout(() => {
             toast.classList.add('revealed');
         }, 550);
@@ -457,7 +550,7 @@
             pixelGrid.classList.remove('appear');
             pixelGrid.classList.add('disappear');
 
-            // Hide element styles gracefully during full occlusion phase
+            // Fade element values back during full cover state
             setTimeout(() => {
                 toast.classList.remove('revealed');
             }, 550);
