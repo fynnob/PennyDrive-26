@@ -66,21 +66,26 @@
         .toast { 
             pointer-events: auto; 
             position: relative; 
-            background: transparent; /* Transitions to solid slate gray behind the mask */
+            background: transparent; 
             color: #ffffff; 
             padding: 26px 32px; 
             border-radius: 12px; 
-            box-shadow: none; 
             width: 360px;
             font-size: 1.05rem; 
             font-weight: 500; 
             overflow: hidden; 
-            transition: background-color 0s, box-shadow 0s;
+            animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+            
+            /* OPTION 3 IMPLEMENTATION: Maintain an open transparent shadow layout shape */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0); 
+            transition: background-color 0s, box-shadow 0.5s ease; 
         }
 
         .toast.revealed {
             background: #1e293b;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            
+            /* Fluid alpha channel transition bloom completely isolated from layout reflow runs */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
         }
 
         .toast-border-svg {
@@ -94,7 +99,6 @@
             opacity: 1;
         }
 
-        /* Continuous linear draining sequence */
         .toast.revealed .toast-rect-path {
             stroke-dasharray: 100;
             stroke-dashoffset: 0;
@@ -112,7 +116,6 @@
             opacity: 1;
         }
 
-        /* Parent container hooks for hardware-accelerated GPU transitions */
         .pixel-grid {
             position: absolute; 
             top: 0; left: 0; width: 100%; height: 100%; 
@@ -126,12 +129,11 @@
             background-color: transparent;
         }
 
-        /* Enter Sequence (Invisible -> Rainbow -> White -> Clear) Bottom-Left to Top-Right */
+        /* Enter Wave Progression mapping Rules */
         .pixel-grid.appear .pixel-block {
             animation: pixelAnimAppear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
             animation-delay: var(--delay-appear);
         }
-
         @keyframes pixelAnimAppear {
             0% { opacity: 0; background-color: transparent; }
             25% { opacity: 1; background-color: var(--block-color); }
@@ -141,12 +143,11 @@
             100% { opacity: 0; background-color: transparent; }
         }
 
-        /* Exit Sequence (Clear -> White -> Rainbow -> Invisible) Top-Right to Bottom-Left */
+        /* Exit Wave Progression mapping Rules */
         .pixel-grid.disappear .pixel-block {
             animation: pixelAnimDisappear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
             animation-delay: var(--delay-disappear);
         }
-
         @keyframes pixelAnimDisappear {
             0% { opacity: 0; background-color: transparent; }
             25% { opacity: 1; background-color: #ffffff; }
@@ -426,12 +427,10 @@
                 const xc = c * blockSize + blockSize / 2;
                 const yc = r * blockSize + blockSize / 2;
 
-                // Color mapping: Red top-right, Purple bottom-left
                 const t = (xc + (height - yc)) / (width + height);
                 const hue = (1 - t) * 280; 
                 block.style.setProperty('--block-color', `hsl(${hue}, 95%, 50%)`);
 
-                // Map linear delays for both entry and exit sweeps
                 const delayAppear = t * 0.3;
                 const delayDisappear = ((width - xc) + yc) / (width + height) * 0.3;
 
@@ -442,7 +441,7 @@
             }
         }
 
-        // SWAP 1: Unhide elements at exactly 550ms while fully masked
+        // SWAP 1: Unhide elements smoothly under the 100% full shield layer
         setTimeout(() => {
             toast.classList.add('revealed');
         }, 550);
@@ -458,12 +457,11 @@
             pixelGrid.classList.remove('appear');
             pixelGrid.classList.add('disappear');
 
-            // Hide assets at exactly 550ms into the reverse sweep while fully masked
+            // Hide element styles gracefully during full occlusion phase
             setTimeout(() => {
                 toast.classList.remove('revealed');
             }, 550);
 
-            // Clean element off DOM tree when animations finish completely
             setTimeout(() => { toast.remove(); }, 1200);
         }, 30000); 
     }
