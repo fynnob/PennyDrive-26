@@ -35,58 +35,93 @@
 
         /* Podium Layout */
         .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; padding-top: 20px; }
-        .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; transition: transform 0.3s, background-color 0.3s, min-height 0.3s, padding 0.3s; }
+        .podium-spot { background: var(--card-bg); border-radius: 16px; padding: 20px; text-align: center; flex: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; transition: transform 0.3s, background-color 0.3s; }
         .podium-spot.first { order: 2; min-height: 270px; border: 2px solid #eab308;}
         .podium-spot.second { order: 1; min-height: 230px; border: 2px solid #cbd5e1;}
         .podium-spot.third { order: 3; min-height: 200px; border: 2px solid #b45309;}
 
-        .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.3s, height 0.3s, font-size 0.3s, top 0.3s; }
+        .badge { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
         .first .badge { background: #eab308; } .second .badge { background: #94a3b8; } .third .badge { background: #b45309; }
 
         /* Dynamic Image Avatar Frames */
-        .avatar-frame { width: 75px; height: 75px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; transition: width 0.3s, height 0.3s, margin 0.3s; }
-        .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; transition: width 0.3s, height 0.3s, margin-right 0.3s; }
+        .avatar-frame { width: 75px; height: 75px; border-radius: 50%; margin: 10px auto; overflow: hidden; border: 2px solid #e2e8f0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .list-avatar-frame { width: 45px; height: 45px; border-radius: 50%; overflow: hidden; margin-right: 15px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; }
         .avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .avatar-fallback-text { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; background: #eee; }
         .list-avatar-frame .avatar-fallback-text { font-size: 1.2rem; }
 
-        .teacher-name { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: font-size 0.3s, margin-bottom 0.3s; }
-        .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; transition: font-size 0.3s; }
+        .teacher-name { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .teacher-amount { font-size: 1.25rem; color: #2563eb; font-weight: 700; }
 
         /* Leaderboard Scroll Rows */
-        .leaderboard-list { background: var(--card-bg); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; transition: padding 0.3s; }
-        .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: transform 0.3s, background-color 0.3s, padding 0.3s; border-radius: 8px; }
+        .leaderboard-list { background: var(--card-bg); border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .list-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; transition: transform 0.3s, background-color 0.3s; border-radius: 8px; }
         .list-item:last-child { border-bottom: none; }
-        .rank-num { width: 30px; font-weight: bold; color: #888; transition: width 0.3s, font-size 0.3s; }
-        .list-name { flex-grow: 1; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: font-size 0.3s; }
+        .rank-num { width: 30px; font-weight: bold; color: #888; }
+        .list-name { flex-grow: 1; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
-        /* ------------------------------------
-           1. CINEMATIC PROJECTOR SCALE OVERRIDES
-        ------------------------------------ */
-        body.board-mode { background-color: #f1f5f9; }
-        body.board-mode .container { max-width: 95vw; padding: 20px 0; }
-        body.board-mode header { padding: 40px 60px; border-radius: 24px; }
-        body.board-mode header h1 { font-size: 4.5rem; }
-        body.board-mode .total-raised { padding: 20px 45px; border-radius: 20px; }
-        body.board-mode .total-raised h2 { font-size: 4rem; }
+        /* ----------------------------------------------------
+           1. BOARD MODE STYLES (FLUID SYSTEM UNITS BASED ON EM)
+        ---------------------------------------------------- */
+        body.board-mode { 
+            background-color: #f1f5f9; 
+            overflow: hidden; /* Lock viewport structure */
+            height: 100vh;
+            padding: 0;
+        }
         
-        body.board-mode .podium { gap: 40px; margin-bottom: 60px; padding-top: 50px; }
-        body.board-mode .podium-spot { border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-        body.board-mode .podium-spot.first { min-height: 520px; }
-        body.board-mode .podium-spot.second { min-height: 450px; }
-        body.board-mode .podium-spot.third { min-height: 390px; }
+        body.board-mode .container { 
+            max-width: 95vw; 
+            height: 100vh;
+            padding: 1.5em 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        body.board-mode header { 
+            padding: 1em 2em; 
+            border-radius: 1.2em; 
+            margin-bottom: 1em; 
+            flex-shrink: 0;
+        }
+        /* Smaller Header Title forced onto a crisp single line layout */
+        body.board-mode header h1 { 
+            font-size: 1.8em; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        body.board-mode .total-raised { padding: 0.6em 1.8em; border-radius: 1em; }
+        body.board-mode .total-raised h2 { font-size: 1.8em; white-space: nowrap; }
         
-        body.board-mode .badge { width: 65px; height: 65px; font-size: 2.2rem; top: -32px; }
-        body.board-mode .avatar-frame { width: 190px; height: 190px; margin: 25px auto; border-width: 4px; }
-        body.board-mode .teacher-name { font-size: 2.8rem; margin-bottom: 15px; white-space: nowrap; }
-        body.board-mode .teacher-amount { font-size: 3.6rem; }
+        body.board-mode .podium { gap: 1.8em; margin-bottom: 1.5em; padding-top: 1.8em; flex-shrink: 0; }
+        body.board-mode .podium-spot { border-radius: 1.5em; padding: 1.2em; }
+        body.board-mode .podium-spot.first { min-height: 21em; }
+        body.board-mode .podium-spot.second { min-height: 18em; }
+        body.board-mode .podium-spot.third { min-height: 15em; }
         
-        body.board-mode .leaderboard-list { padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
-        body.board-mode .list-item { padding: 30px 25px; }
-        body.board-mode .rank-num { width: 90px; font-size: 2.6rem; }
-        body.board-mode .list-avatar-frame { width: 110px; height: 110px; margin-right: 40px; }
-        body.board-mode .list-name { font-size: 2.6rem; white-space: nowrap; }
-        body.board-mode .list-item .teacher-amount { font-size: 3rem; }
+        body.board-mode .badge { width: 3em; height: 3em; font-size: 1.1em; top: -1.5em; }
+        body.board-mode .avatar-frame { width: 8.5em; height: 8.5em; margin: 0.8em auto; border-width: 0.2em; }
+        body.board-mode .teacher-name { font-size: 1.5em; margin-bottom: 0.4em; white-space: nowrap; }
+        body.board-mode .teacher-amount { font-size: 2em; }
+        
+        body.board-mode .leaderboard-list { 
+            padding: 1.2em; 
+            border-radius: 1.5em; 
+            margin-bottom: 0; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06); 
+            flex-grow: 1; 
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: trilinear;
+        }
+        body.board-mode .list-item { padding: 0.8em 1.2em; flex-grow: 1; }
+        body.board-mode .rank-num { width: 3.5em; font-size: 1.4em; }
+        body.board-mode .list-avatar-frame { width: 4.8em; height: 4.8em; margin-right: 1.8em; }
+        body.board-mode .list-name { font-size: 1.5em; white-space: nowrap; }
+        body.board-mode .list-item .teacher-amount { font-size: 1.7em; }
 
         /* Bottom-Right Notification Toast Stack System */
         .notification-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column-reverse; gap: 12px; z-index: 10000; pointer-events: none; }
@@ -114,7 +149,6 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        /* 2. BLENDED INWARD CONTOUR BORDER DESIGN */
         .toast-border-svg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -140,7 +174,7 @@
         
         .pixel-block { position: absolute; opacity: 0; background-color: transparent; }
 
-        /* Enter Sequence (Invisible -> Rainbow -> White -> Clear) Bottom-Left to Top-Right */
+        /* Enter Sequence Animations */
         .pixel-grid.appear .pixel-block {
             animation: pixelAnimAppear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
             animation-delay: var(--delay-appear);
@@ -154,7 +188,7 @@
             100% { opacity: 0; background-color: transparent; }
         }
 
-        /* Exit Sequence (Clear -> White -> Rainbow -> Invisible) Top-Right to Bottom-Left */
+        /* Exit Sequence Animations */
         .pixel-grid.disappear .pixel-block {
             animation: pixelAnimDisappear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
             animation-delay: var(--delay-disappear);
@@ -171,7 +205,6 @@
         @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes drainBorder { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
 
-        /* Live Component Visual Flash Highlighting Animation */
         .highlight-flash { animation: cardFlash 4s ease; }
         @keyframes cardFlash {
             0% { transform: scale(1); }
@@ -180,25 +213,21 @@
             100% { transform: scale(1); }
         }
 
-        /* Floating Developer Button Tree */
+        /* Developer controls */
         .fab-group { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
         .fab-btn { width: 60px; height: 60px; color: white; border: none; border-radius: 50%; font-size: 1.6rem; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; display: none; align-items: center; justify-content: center; transition: transform 0.2s; }
         .fab-btn:hover { transform: scale(1.08); }
         #fab-teacher { background: #16a34a; }
         #fab-donation { background: #2563eb; }
-
-        /* Inline Dev Editing Buttons */
         .dev-edit-btn { background: #6b7280; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
         .dev-edit-btn:hover { background: #4b5563; }
 
-        /* Lazy Transactions Styling */
         .transactions-section { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative; z-index: 1; }
         .btn-load-transactions { background: #4b5563; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn-load-transactions:hover { background: #374151; }
         .transaction-log { margin-top: 15px; max-height: 250px; overflow-y: auto; display: none; }
         .tx-item { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
 
-        /* Dialog UI elements */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: white; padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; }
         .form-group { margin-bottom: 15px; }
@@ -257,7 +286,6 @@
     <div class="modal">
         <h3 id="donation-modal-title">Log New Donation</h3>
         <input type="hidden" id="edit-tx-id" value="">
-        
         <div class="form-group" style="margin-top: 15px;">
             <label for="modal-teacher-select">Select Teacher Target Jar</label>
             <select id="modal-teacher-select"></select>
@@ -282,7 +310,6 @@
     <div class="modal">
         <h3 id="teacher-modal-title">Add New Teacher</h3>
         <input type="hidden" id="edit-teacher-id" value="">
-        
         <div class="form-group" style="margin-top: 15px;">
             <label for="teacher-title">Honorific Prefix (Title)</label>
             <input type="text" id="teacher-title" placeholder="e.g. Mr., Ms., Dr.">
@@ -332,15 +359,12 @@
         "t3": { id: "t3", title: "Frau", name: "Müller", total: 0, avatar: "https://robohash.org/muller.png?set=set4" }
     };
 
-    // Google Profile Image Max Sizing Engine Interceptor
     function renderAvatar(avatarString) {
         if (!avatarString) {
             return `<img class="avatar-img" src="https://robohash.org/placeholder.png?set=set4" alt="profile">`;
         }
         if (avatarString.startsWith('http://') || avatarString.startsWith('https://')) {
             let optimizedUrl = avatarString;
-            
-            // Catch Google CDN references and automatically bind crisp high-res canvas streams
             if (optimizedUrl.includes('googleusercontent.com')) {
                 const sIndex = optimizedUrl.indexOf('=s');
                 if (sIndex !== -1) {
@@ -380,6 +404,7 @@
         if (isBoard) {
             document.getElementById('audit-log-section').style.display = 'none';
             initLiveNotificationStream();
+            window.addEventListener('resize', adjustBoardScale);
         }
 
         db.ref(`authorized_tokens/${savedToken}`).once('value')
@@ -399,6 +424,34 @@
             isTeacher = false;
             loadBoardData();
         });
+    }
+
+    /* ----------------------------------------------------
+       2. RE-CALIBRATED DISCRETE SEARCH SCALE MECHANISM
+    ---------------------------------------------------- */
+    function adjustBoardScale() {
+        if (!isBoard) return;
+        const container = document.querySelector('.container');
+        if (!container) return;
+
+        let minFontSize = 8;
+        let maxFontSize = 75;
+        let perfectFitSize = 16;
+
+        // Perform logarithmic search adjustments over 12 frame refresh rendering cycles
+        for (let i = 0; i < 12; i++) {
+            let mid = Math.floor((minFontSize + maxFontSize) / 2);
+            container.style.fontSize = mid + 'px';
+
+            // Verify if the em layout boundaries fit safely inside the absolute viewport constraints
+            if (container.scrollHeight <= window.innerHeight) {
+                perfectFitSize = mid;
+                minFontSize = mid + 1; // Try to scale bigger if room permits
+            } else {
+                maxFontSize = mid - 1; // Scale down to fit
+            }
+        }
+        container.style.fontSize = perfectFitSize + 'px';
     }
 
     function initBackgroundConstellation() {
@@ -439,7 +492,6 @@
 
                 ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
                 ctx.fillStyle = n.color;
-                // GLOW REMOVED: Stripped out layout thrashing shadow filters completely for optimal projector performance
                 ctx.fill();
             });
 
@@ -619,6 +671,11 @@
                         <div class="teacher-amount" style="font-size:1.1rem; margin-right:5px;">$${t.total.toFixed(2)}</div>
                     </div>`;
             }
+        }
+
+        // Fire auto scaling calculation loops after data arrays render completely
+        if (isBoard) {
+            adjustBoardScale();
         }
     }
 
