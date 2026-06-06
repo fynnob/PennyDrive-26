@@ -66,25 +66,36 @@
         .toast { 
             pointer-events: auto; 
             position: relative; 
-            background: #1e293b;
+            background: transparent; /* Transitions to solid slate gray behind the mask */
             color: #ffffff; 
-            padding: 26px 32px; /* Expanded padding to buffer enlarged inward progress lines */
+            padding: 26px 32px; 
             border-radius: 12px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
+            box-shadow: none; 
             width: 360px;
             font-size: 1.05rem; 
             font-weight: 500; 
             overflow: hidden; 
-            animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+            transition: background-color 0s, box-shadow 0s;
+        }
+
+        .toast.revealed {
+            background: #1e293b;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
 
         .toast-border-svg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 4;
+            opacity: 0;
         }
 
-        .toast-rect-path {
+        .toast.revealed .toast-border-svg {
+            opacity: 1;
+        }
+
+        /* Continuous linear draining sequence */
+        .toast.revealed .toast-rect-path {
             stroke-dasharray: 100;
             stroke-dashoffset: 0;
             animation: drainBorder 30s linear forwards;
@@ -94,42 +105,57 @@
             position: relative;
             z-index: 2;
             line-height: 1.4;
+            opacity: 0;
         }
 
-        /* Pixel-Grid Wave Overlay Structural Rules */
+        .toast.revealed .toast-content {
+            opacity: 1;
+        }
+
+        /* Parent container hooks for hardware-accelerated GPU transitions */
+        .pixel-grid {
+            position: absolute; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; z-index: 5; 
+            overflow: hidden; border-radius: 12px;
+        }
+
         .pixel-block {
             position: absolute;
             opacity: 0;
-            z-index: 5;
+            background-color: transparent;
         }
 
-        /* Sequential Appearing Wave Map (Invisible -> Rainbow -> White -> Clear) */
-        .pixel-block-appear {
-            animation: pixelAnimAppear 1.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        /* Enter Sequence (Invisible -> Rainbow -> White -> Clear) Bottom-Left to Top-Right */
+        .pixel-grid.appear .pixel-block {
+            animation: pixelAnimAppear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation-delay: var(--delay-appear);
         }
+
         @keyframes pixelAnimAppear {
             0% { opacity: 0; background-color: transparent; }
-            20% { opacity: 1; background-color: var(--block-color); } /* Rainbow wave rolls over */
-            50% { background-color: var(--block-color); }            /* Maintain distinct color */
-            70% { background-color: #ffffff; }                       /* White wave follows behind */
-            85% { background-color: #ffffff; opacity: 1; }            /* Hold white sheet solid */
-            100% { opacity: 0; background-color: transparent; }       /* Dissolve to clear */
+            25% { opacity: 1; background-color: var(--block-color); }
+            55% { background-color: var(--block-color); }
+            75% { background-color: #ffffff; opacity: 1; }
+            85% { background-color: #ffffff; opacity: 1; }
+            100% { opacity: 0; background-color: transparent; }
         }
 
-        /* Sequential Disappearing Wave Map (Clear -> White -> Rainbow -> Invisible) */
-        .pixel-block-disappear {
-            animation: pixelAnimDisappear 1.0s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        /* Exit Sequence (Clear -> White -> Rainbow -> Invisible) Top-Right to Bottom-Left */
+        .pixel-grid.disappear .pixel-block {
+            animation: pixelAnimDisappear 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            animation-delay: var(--delay-disappear);
         }
+
         @keyframes pixelAnimDisappear {
             0% { opacity: 0; background-color: transparent; }
-            20% { opacity: 1; background-color: #ffffff; }           /* White cover rolls over */
-            50% { background-color: #ffffff; }                        /* Hold solid cover */
-            70% { background-color: var(--block-color); }             /* Rainbow wave transforms layer */
-            85% { background-color: var(--block-color); opacity: 1; } /* Hold grid visible */
-            100% { opacity: 0; background-color: transparent; }       /* Complete wipe */
+            25% { opacity: 1; background-color: #ffffff; }
+            55% { background-color: #ffffff; }
+            75% { background-color: var(--block-color); opacity: 1; }
+            85% { background-color: var(--block-color); opacity: 1; }
+            100% { opacity: 0; background-color: transparent; }
         }
         
-        @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes drainBorder { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 100; } }
 
         /* Live Component Visual Flash Highlighting Animation */
@@ -365,18 +391,17 @@
             <svg class="toast-border-svg">
                 <rect rx="11" fill="none" stroke="url(#rainbowGrad)" stroke-width="10" pathLength="100" class="toast-rect-path"></rect>
             </svg>
-            <div class="toast-content" style="opacity: 0; transition: opacity 0.25s ease;">
+            <div class="toast-content">
                 <strong>${tx.student}</strong> donated <strong>$${tx.amount.toFixed(2)}</strong> to <strong>${tx.to}</strong>!
             </div>
-            <div class="pixel-grid" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5; overflow:hidden; border-radius:12px;"></div>
+            <div class="pixel-grid appear"></div>
         `;
         
         stack.appendChild(toast);
         
-        // Configure explicit inward stroke alignment geometry
         const width = toast.offsetWidth;
         const height = toast.offsetHeight;
-        const strokeWidth = 10; // Upgraded thickness
+        const strokeWidth = 10;
         
         const rect = toast.querySelector('rect');
         rect.setAttribute('x', strokeWidth / 2);
@@ -384,7 +409,6 @@
         rect.setAttribute('width', width - strokeWidth);
         rect.setAttribute('height', height - strokeWidth);
 
-        // Build Discrete Pixel Matrix
         const pixelGrid = toast.querySelector('.pixel-grid');
         const blockSize = 18; 
         const cols = Math.ceil(width / blockSize);
@@ -402,24 +426,26 @@
                 const xc = c * blockSize + blockSize / 2;
                 const yc = r * blockSize + blockSize / 2;
 
-                // Color calculation: Red in top-right, Purple in bottom-left
+                // Color mapping: Red top-right, Purple bottom-left
                 const t = (xc + (height - yc)) / (width + height);
                 const hue = (1 - t) * 280; 
                 block.style.setProperty('--block-color', `hsl(${hue}, 95%, 50%)`);
 
-                // Delay wave calculations: Bottom-Left to Top-Right sweep
-                const appearDelay = t * 0.42; 
-                block.style.animationDelay = appearDelay + 's';
-                block.classList.add('pixel-block-appear');
+                // Map linear delays for both entry and exit sweeps
+                const delayAppear = t * 0.3;
+                const delayDisappear = ((width - xc) + yc) / (width + height) * 0.3;
+
+                block.style.setProperty('--delay-appear', delayAppear + 's');
+                block.style.setProperty('--delay-disappear', delayDisappear + 's');
 
                 pixelGrid.appendChild(block);
             }
         }
 
-        // Unhide text card layer dynamically behind the opaque sheets
+        // SWAP 1: Unhide elements at exactly 550ms while fully masked
         setTimeout(() => {
-            toast.querySelector('.toast-content').style.opacity = '1';
-        }, 450);
+            toast.classList.add('revealed');
+        }, 550);
 
         const targetElement = document.getElementById(`card-${tx.teacherId}`);
         if (targetElement) {
@@ -427,34 +453,18 @@
             setTimeout(() => { targetElement.classList.remove('highlight-flash'); }, 4100);
         }
         
-        // Initiate Reverse Transition Wipes at exactly 30 seconds
+        // SWAP 2: Trigger exit sequence at 30 seconds
         setTimeout(() => {
-            // Hide the base components instantly as the white wave rolls over them
+            pixelGrid.classList.remove('appear');
+            pixelGrid.classList.add('disappear');
+
+            // Hide assets at exactly 550ms into the reverse sweep while fully masked
             setTimeout(() => {
-                toast.querySelector('.toast-content').style.opacity = '0';
-                toast.querySelector('.toast-border-svg').style.opacity = '0';
-                toast.style.backgroundColor = 'transparent';
-                toast.style.boxShadow = 'none';
-            }, 350);
+                toast.classList.remove('revealed');
+            }, 550);
 
-            const blocks = pixelGrid.querySelectorAll('.pixel-block');
-            blocks.forEach(block => {
-                block.classList.remove('pixel-block-appear');
-                
-                const bx = parseFloat(block.style.left) + blockSize / 2;
-                const by = parseFloat(block.style.top) + blockSize / 2;
-
-                // Disappearing delay mapping: Top-Right to Bottom-Left sweep
-                const tDisappear = ((width - bx) + by) / (width + height);
-                const disappearDelay = tDisappear * 0.42;
-
-                block.style.animationDelay = disappearDelay + 's';
-                void block.offsetWidth; // Force hardware reflow rendering cycle
-                block.classList.add('pixel-block-disappear');
-            });
-
-            // Housekeeping: remove element completely from document DOM
-            setTimeout(() => { toast.remove(); }, 1450);
+            // Clean element off DOM tree when animations finish completely
+            setTimeout(() => { toast.remove(); }, 1200);
         }, 30000); 
     }
 
